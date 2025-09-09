@@ -35,7 +35,7 @@ const CDP_CONFIG: Config = {
 const APP_CONFIG: AppConfig = {
   name: "BountyHub",
   logoUrl: "http://localhost:3000/favicon.ico",
-  authMethods: ["email", "sms"],
+  authMethods: ["email"],
 };
 
 /**

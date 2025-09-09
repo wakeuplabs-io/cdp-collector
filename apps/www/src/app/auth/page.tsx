@@ -7,8 +7,8 @@ export default function Auth() {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div className="border rounded-xl min-w-lg p-4">
+    <div className="flex flex-row items-center justify-center h-screen">
+      <div className="border rounded-xl max-w-lg pb-8 flex-1">
         <SignIn
           onSuccess={() => {
             router.push("/dashboard");

@@ -77,18 +77,16 @@ export default function Home() {
         <div className="space-y-6">
           <div>
             <h1 className={`text-[4em] -mb-4 font-normal ${dmSans.className}`}>
-              Create bounties for
+              Create fundraisers for
             </h1>
             <TypeAnimation
               preRenderFirstString={true}
               sequence={[
-                "designs",
+                "art",
                 1000,
-                "videos",
+                "projects",
                 1000,
-                "websites",
-                1000,
-                "hackathons",
+                "causes",
                 1000,
               ]}
               wrapper="h1"
@@ -106,7 +104,7 @@ export default function Home() {
           <p
             className={`text-xl text-muted-foreground font-medium ${dmSans.className}`}
           >
-            Create Challenge. Get Submissions. Award Winners.
+            Create Fundraiser. Get Donations. Help Causes.
           </p>
         </div>
 
@@ -116,9 +114,9 @@ export default function Home() {
             <div className="w-12 h-12 flex items-center justify-center bg-orange-500/20 rounded-md">
               <BoltIcon className="w-8 h-8 text-orange-500" />
             </div>
-            <p className="text-foreground text-sm font-bold">Secure Escrow</p>
+            <p className="text-foreground text-sm font-bold">Smart Distribution</p>
             <p className="text-muted-foreground text-xs max-w-[200px] text-center">
-              Protect your funds and ensure fair payments to your participants.
+              Automatically distribute funds to beneficiaries based on preset rules.
             </p>
           </div>
 
@@ -126,9 +124,9 @@ export default function Home() {
             <div className="w-12 h-12 flex items-center justify-center bg-green-500/20 rounded-md">
               <CurrencyDollarIcon className="w-8 h-8 text-green-500" />
             </div>
-            <p className="text-foreground text-sm font-bold">USDC Payments</p>
+            <p className="text-foreground text-sm font-bold">Universal Donations</p>
             <p className="text-muted-foreground text-xs max-w-[200px] text-center">
-              Fast global payments using the USDC stablecoin.
+              Accept donations in any token or fiat, automatically settled in USDC.
             </p>
           </div>
 
@@ -136,9 +134,9 @@ export default function Home() {
             <div className="w-12 h-12 flex items-center justify-center bg-blue-500/20 rounded-md">
               <GlobeAltIcon className="w-8 h-8 text-blue-500" />
             </div>
-            <p className="text-foreground text-sm font-bold">Decentralized</p>
+            <p className="text-foreground text-sm font-bold">Transparent</p>
             <p className="text-muted-foreground text-xs max-w-[200px] text-center">
-              Built on robust, censorship-resistant infrastructure.
+              All donations are tracked on-chain for complete transparency.
             </p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Address } from "@/components/address";
+import { CryptoTokenSelector } from "@/components/token-selector";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,22 +10,19 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { NETWORK, TOKEN_DECIMALS } from "@/config";
+import { TOKEN_DECIMALS } from "@/config";
 import { useBalance, useWithdraw } from "@/hooks/balance";
 import { formatBalance, shortenAddress } from "@/lib/utils";
 import { useEvmAddress, useSignOut } from "@coinbase/cdp-hooks";
 import {
-  AlertCircleIcon,
   ArrowLeftIcon,
   ArrowUpIcon,
-  XIcon,
+  XIcon
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { isAddress, parseUnits } from "viem";
-import { Alert, AlertTitle } from "./ui/alert";
 
 enum Tab {
   Account = "account",
@@ -47,33 +45,16 @@ const Account: React.FC<{
         className="mb-2"
       />
 
-      {NETWORK === "base-sepolia" && (
-        <Alert
-          variant="default"
-          className="bg-[#FFF5E6] border-none mb-6 justify-center flex"
-        >
-          <AlertCircleIcon color="blue" />
-          <AlertTitle className="text-sm font-normal">
-            Your account is on <span className="font-bold">Base Sepolia</span>
-          </AlertTitle>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-2 gap-2 mb-6">
-        <button
-          onClick={() => setTab(Tab.Withdraw)}
-          className="flex justify-start text-sm flex-col gap-2 items-center hover:bg-muted p-2 rounded-md"
-        >
-          <ArrowUpIcon className="w-4 h-4" />
-          <div>Withdraw</div>
-        </button>
-      </div>
+      <Button onClick={() => setTab(Tab.Withdraw)} className="w-full mb-14" size="lg">
+        <ArrowUpIcon className="w-4 h-4" />
+        <span>Withdraw</span>
+      </Button>
 
       <Button
         size="lg"
         variant="outline"
         onClick={signOut}
-        className="w-full text-destructive flex justify-center text-sm"
+        className="w-full text-destructive hover:text-destructive/80 flex justify-center text-sm"
       >
         Sign out
       </Button>
@@ -134,13 +115,7 @@ const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
   if (!evmAddress) return null;
   return (
     <div>
-      <Address
-        label="From"
-        address={evmAddress}
-        balance={balance}
-        balanceLabel="USDC"
-        className="mb-2"
-      />
+      <CryptoTokenSelector className="mb-2" />
 
       <div className="bg-muted rounded-md px-4 py-3 flex items-center  gap-2 relative pt-6 mb-2">
         <span className="text-xs text-muted-foreground absolute left-4 top-1">
@@ -166,20 +141,7 @@ const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
         />
       </div>
 
-      {NETWORK === "base-sepolia" && (
-        <Alert
-          variant="default"
-          className="bg-[#FFF5E6] border-none mb-6 justify-center flex"
-        >
-          <AlertCircleIcon color="blue" />
-          <AlertTitle className="text-sm font-normal">
-            Your are withdrawing from{" "}
-            <span className="font-bold">Base Sepolia</span>
-          </AlertTitle>
-        </Alert>
-      )}
-
-      <div data-tooltip-id="error-tooltip">
+      <div data-tooltip-id="error-tooltip" className="mt-10">
         <Button
           size="lg"
           className="w-full"
@@ -248,15 +210,6 @@ export const AccountManager = () => {
           onClick={() => setIsOpen(true)}
           className="flex items-center gap-4 rounded-full border h-[46px] px-4 shrink-0"
         >
-          <span className="text-sm">{shortenAddress(evmAddress ?? "")}</span>
-          <span className="text-sm text-muted-foreground">
-            {formatBalance(balance ?? BigInt(0))} USDC
-          </span>
-        </button>
-        <Link
-          href={`/${evmAddress}/challenges`}
-          className="rounded-full border h-[46px] w-[46px] flex items-center justify-center shrink-0"
-        >
           <Image
             src="/avatar.webp"
             alt="avatar"
@@ -264,7 +217,11 @@ export const AccountManager = () => {
             width={18}
             height={18}
           />
-        </Link>
+          <span className="text-sm">{shortenAddress(evmAddress ?? "")}</span>
+          <span className="text-sm text-muted-foreground">
+            {formatBalance(balance ?? BigInt(0))} USDC
+          </span>
+        </button>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

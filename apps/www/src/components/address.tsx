@@ -39,7 +39,7 @@ export const Address = ({
         {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
       </button>
 
-      {balance !== undefined && balanceLabel !== undefined && (
+      { balance !== undefined && balanceLabel !== undefined && (
         <div
           className={cn(
             "text-xs text-muted-foreground absolute right-0 bottom-1 bg-muted rounded-md px-4 py-3"

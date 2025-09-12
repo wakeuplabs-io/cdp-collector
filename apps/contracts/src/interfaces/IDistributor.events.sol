@@ -28,24 +28,20 @@ interface IDistributorEvents {
     /// @param poolId The pool identifier
     /// @param donor The address of the donor
     /// @param amount The amount donated in USDC
-    /// @param newTotalBalance The new total balance of the pool
     event DonationMade(
         uint256 indexed poolId,
         address indexed donor,
-        uint256 amount,
-        uint256 newTotalBalance
+        uint256 amount
     );
 
     /// @notice Emitted when funds are withdrawn from a pool
-    /// @param poolId The pool identifier
     /// @param member The address of the member withdrawing
     /// @param amount The amount withdrawn in USDC
     /// @param recipient The address receiving the funds
     event FundsWithdrawn(
-        uint256 indexed poolId,
         address indexed member,
-        uint256 amount,
-        address indexed recipient
+        address indexed recipient,
+        uint256 amount
     );
 
     /// @notice Emitted when a pool is deactivated

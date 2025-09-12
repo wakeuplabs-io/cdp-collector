@@ -9,7 +9,7 @@ contract Distributor is IDistributor {
     IERC20 public immutable usdc;
 
     /// @notice Counter for generating unique pool IDs
-    uint256 private _nextPoolId = 1;
+    uint256 public nextPoolId = 1;
 
     /// @notice Mapping from pool ID to pool data
     mapping(uint256 => Pool) private _pools;
@@ -17,11 +17,16 @@ contract Distributor is IDistributor {
     /// @notice Mapping from pool ID to array of members
     mapping(uint256 => Member[]) private _poolMembers;
 
-    /// @notice Mapping from pool ID to member address to member index (for faster lookups)
-    mapping(uint256 => mapping(address => uint256)) private _memberIndices;
+    mapping(uint256 => mapping(address => bool)) private _isDonator;
 
-    /// @notice Mapping to check if an address is a member of a pool
+    /// @notice Mapping from user address to pool ids they are a member of
+    mapping(address => uint256[]) private _userPools;
+
+    /// @notice Mapping to check if an address is a member of a pool. poolId -> address -> bool
     mapping(uint256 => mapping(address => bool)) private _isMember;
+
+    /// @notice Global mapping from member address to their available balance
+    mapping(address => uint256) private _balances;
 
     constructor(address _usdcAddress) {
         usdc = IERC20(_usdcAddress);
@@ -32,15 +37,14 @@ contract Distributor is IDistributor {
         string calldata title,
         string calldata description,
         string calldata imageUri,
-        address[] calldata members,
-        uint256[] calldata percentages,
-        bytes32[] calldata invitationCodes
+        bytes32[] calldata invitationCodes,
+        uint256[] calldata percentages
     ) external returns (uint256 poolId) {
         if (bytes(title).length == 0) revert EmptyTitle();
-        if (members.length != percentages.length) revert ArrayLengthMismatch();
-        if (members.length != invitationCodes.length) revert ArrayLengthMismatch();
+        if (percentages.length != invitationCodes.length)
+            revert ArrayLengthMismatch();
 
-        // Calculate total percentage for members
+        // Calculate total percentage for invitation slots
         uint256 totalMemberPercentage = 0;
         for (uint256 i = 0; i < percentages.length; i++) {
             if (percentages[i] == 0 || percentages[i] > 10000) {
@@ -54,14 +58,14 @@ contract Distributor is IDistributor {
             revert InvalidTotalPercentage(totalMemberPercentage);
         }
 
-        // // Ensure creator percentage is not zero
-        // uint256 creatorPercentage = 10000 - totalMemberPercentage;
-        // if (creatorPercentage == 0) {
-        //     revert InvalidCreatorPercentage();
-        // }
+        // Ensure creator percentage is not zero
+        uint256 creatorPercentage = 10000 - totalMemberPercentage;
+        if (creatorPercentage == 0) {
+            revert InvalidCreatorPercentage();
+        }
 
         // Increment pool ID
-        poolId = _nextPoolId++;
+        poolId = nextPoolId++;
 
         // Create the pool
         _pools[poolId] = Pool({
@@ -70,84 +74,78 @@ contract Distributor is IDistributor {
             title: title,
             description: description,
             imageUri: imageUri,
-            totalBalance: 0,
-            totalWithdrawn: 0,
+            totalDonationsAmount: 0,
+            totalDonationsCount: 0,
+            uniqueDonatorsCount: 0,
             createdAt: block.timestamp,
-            active: true
+            status: percentages.length == 0
+                ? PoolStatus.ACTIVE
+                : PoolStatus.PENDING
         });
 
         // Add creator as first member
         _poolMembers[poolId].push(
             Member({
-                memberAddress: msg.sender,
-                percentage: 10000 - totalMemberPercentage,
-                totalWithdrawn: 0,
+                member: msg.sender,
+                percentage: creatorPercentage,
                 invitationCodeHash: bytes32(0) // Creator doesn't need invitation code
             })
         );
-        _memberIndices[poolId][msg.sender] = 0;
         _isMember[poolId][msg.sender] = true;
 
-        // Add other members (including address(0) placeholder slots)
-        for (uint256 i = 0; i < members.length; i++) {
+        // Add invitation slots (all with address(0) initially)
+        for (uint256 i = 0; i < percentages.length; i++) {
             _poolMembers[poolId].push(
                 Member({
-                    memberAddress: members[i],
+                    member: address(0), // All slots start as invitation slots
                     percentage: percentages[i],
-                    totalWithdrawn: 0,
                     invitationCodeHash: invitationCodes[i]
                 })
             );
-            
-            if (members[i] != address(0)) {
-                _memberIndices[poolId][members[i]] =
-                    _poolMembers[poolId].length - 1;
-                _isMember[poolId][members[i]] = true;
-            }
         }
 
-        emit PoolCreated(
-            poolId,
-            msg.sender,
-            title,
-            description,
-            imageUri
-        );
+        emit PoolCreated(poolId, msg.sender, title, description, imageUri);
     }
 
     /// @inheritdoc IDistributor
     function joinPool(uint256 poolId, string calldata invitationCode) external {
         Pool storage pool = _pools[poolId];
         if (pool.id == 0) revert PoolNotFound(poolId);
-        if (!pool.active) revert PoolInactive(poolId);
+        if (pool.status == PoolStatus.INACTIVE) revert PoolInactive(poolId);
         if (_isMember[poolId][msg.sender]) revert MemberAlreadyInPool();
-        
+
         // Find slot with matching invitation code hash
         Member[] storage members = _poolMembers[poolId];
         bool slotFound = false;
         uint256 slotIndex;
         uint256 slotPercentage;
-        
+
         bytes32 providedHash = keccak256(abi.encodePacked(invitationCode));
-        
+
         for (uint256 i = 0; i < members.length; i++) {
-            if (members[i].memberAddress == address(0) && 
+            if (
+                members[i].member == address(0) &&
                 members[i].invitationCodeHash == providedHash &&
-                members[i].invitationCodeHash != bytes32(0)) {
+                members[i].invitationCodeHash != bytes32(0)
+            ) {
                 slotIndex = i;
                 slotPercentage = members[i].percentage;
                 slotFound = true;
                 break;
             }
         }
-        
+
         if (!slotFound) revert InvalidInvitationCode();
-        
+
         // Assign member to the slot
-        members[slotIndex].memberAddress = msg.sender;
-        _memberIndices[poolId][msg.sender] = slotIndex;
+        members[slotIndex].member = msg.sender;
         _isMember[poolId][msg.sender] = true;
-        
+
+        // Check if all members have joined and update pool status
+        if (_allMembersJoined(poolId)) {
+            _pools[poolId].status = PoolStatus.ACTIVE;
+        }
+
         emit MemberJoined(poolId, msg.sender, slotPercentage);
     }
 
@@ -155,7 +153,8 @@ contract Distributor is IDistributor {
     function donate(uint256 poolId, uint256 amount) external {
         Pool storage pool = _pools[poolId];
         if (pool.id == 0) revert PoolNotFound(poolId);
-        if (!pool.active) revert PoolInactive(poolId);
+        if (pool.status == PoolStatus.INACTIVE) revert PoolInactive(poolId);
+        if (pool.status == PoolStatus.PENDING) revert PoolPending(poolId);
         if (amount == 0) revert InvalidDonationAmount();
 
         // Transfer USDC from donor to contract
@@ -163,119 +162,146 @@ contract Distributor is IDistributor {
             revert TransferFailed();
         }
 
-        // Update pool balance
-        pool.totalBalance += amount;
+        // Split donation immediately to member balances
+        Member[] storage members = _poolMembers[poolId];
+        for (uint256 i = 0; i < members.length; i++) {
+            uint256 memberShare = (amount * members[i].percentage) / 10000;
+            _balances[members[i].member] += memberShare;
+        }
 
-        emit DonationMade(poolId, msg.sender, amount, pool.totalBalance);
+        // Update pool balance for tracking
+        pool.totalDonationsAmount += amount;
+        pool.totalDonationsCount++;
+        if (!_isDonator[poolId][msg.sender]) {
+            pool.uniqueDonatorsCount++;
+            _isDonator[poolId][msg.sender] = true;
+        }
+
+        emit DonationMade(poolId, msg.sender, amount);
     }
 
     /// @inheritdoc IDistributor
-    function withdraw(
-        uint256 poolId,
-        uint256 amount,
-        address recipient
-    ) external {
-        Pool storage pool = _pools[poolId];
-        if (pool.id == 0) revert PoolNotFound(poolId);
-        if (!pool.active) revert PoolInactive(poolId);
-        if (!_isMember[poolId][msg.sender])
-            revert NotPoolMember(msg.sender, poolId);
+    function withdraw(uint256 amount, address recipient) external {
         if (amount == 0) revert InvalidWithdrawalAmount();
 
-        uint256 availableAmount = getAvailableBalance(poolId, msg.sender);
-        if (amount > availableAmount) {
-            revert InsufficientBalance(amount, availableAmount);
+        uint256 balance = _balances[msg.sender];
+        if (amount > balance) {
+            revert InsufficientBalance(amount, balance);
         }
 
-        // Update member's withdrawn amount
-        uint256 memberIndex = _memberIndices[poolId][msg.sender];
-        _poolMembers[poolId][memberIndex].totalWithdrawn += amount;
-        pool.totalWithdrawn += amount;
+        // Update member's global balance
+        _balances[msg.sender] -= amount;
 
         // Transfer USDC to recipient
         if (!usdc.transfer(recipient, amount)) {
             revert TransferFailed();
         }
 
-        emit FundsWithdrawn(poolId, msg.sender, amount, recipient);
+        emit FundsWithdrawn(msg.sender, recipient, amount);
     }
 
     /// @inheritdoc IDistributor
     function deactivatePool(uint256 poolId) external {
         Pool storage pool = _pools[poolId];
-        if (pool.id == 0) revert PoolNotFound(poolId);
-        if (msg.sender != pool.creator)
-            revert NotPoolCreator(msg.sender, poolId);
 
-        pool.active = false;
+        if (pool.id == 0) {
+            revert PoolNotFound(poolId);
+        } else if (msg.sender != pool.creator) {
+            revert NotPoolCreator(msg.sender, poolId);
+        }
+
+        // deactivate pool
+        pool.status = PoolStatus.INACTIVE;
+
         emit PoolDeactivated(poolId, msg.sender);
     }
 
     /// @inheritdoc IDistributor
     function getPool(uint256 poolId) external view returns (Pool memory pool) {
-        pool = _pools[poolId];
-        if (pool.id == 0) revert PoolNotFound(poolId);
+        return _pools[poolId];
+    }
+
+    /// @inheritdoc IDistributor
+    function getPoolMembersCount(
+        uint256 poolId
+    ) external view returns (uint256 total) {
+        return _poolMembers[poolId].length;
     }
 
     /// @inheritdoc IDistributor
     function getPoolMembers(
-        uint256 poolId
+        uint256 poolId,
+        uint256 offset,
+        uint256 limit
     ) external view returns (Member[] memory members) {
-        //  TODO: simplify?
         if (_pools[poolId].id == 0) revert PoolNotFound(poolId);
 
-        Member[] storage poolMembers = _poolMembers[poolId];
+        if (offset > _poolMembers[poolId].length) {
+            return new Member[](0);
+        } else if (offset + limit > _poolMembers[poolId].length) {
+            limit = _poolMembers[poolId].length - offset;
+        }
 
-        members = new Member[](poolMembers.length);
-        uint256 index = 0;
-
-        for (uint256 i = 0; i < poolMembers.length; i++) {
-            members[index] = Member({
-                memberAddress: poolMembers[i].memberAddress,
-                invitationCodeHash: poolMembers[i].invitationCodeHash,
-                percentage: poolMembers[i].percentage,
-                totalWithdrawn: poolMembers[i].totalWithdrawn
-            });
-            index++;
+        members = new Member[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            members[i] = _poolMembers[poolId][i + offset];
         }
     }
 
     /// @inheritdoc IDistributor
-    function getAvailableBalance(
-        uint256 poolId,
+    function getBalanceOf(
         address member
     ) public view returns (uint256 availableAmount) {
-        if (_pools[poolId].id == 0) revert PoolNotFound(poolId);
-        if (!_isMember[poolId][member]) return 0;
+        return _balances[member];
+    }
 
-        uint256 memberIndex = _memberIndices[poolId][member];
-        Member storage memberData = _poolMembers[poolId][memberIndex];
 
-        Pool storage pool = _pools[poolId];
-        uint256 memberShare = (pool.totalBalance * memberData.percentage) /
-            10000;
+    /// @inheritdoc IDistributor
+    function getDonationsCount(
+        uint256 poolId
+    ) external view returns (uint256 total) {
+        return _pools[poolId].totalDonationsCount;
+    }
 
-        if (memberShare > memberData.totalWithdrawn) {
-            availableAmount = memberShare - memberData.totalWithdrawn;
+    /// @inheritdoc IDistributor
+    function getUserPoolsCount(
+        address user
+    ) external view returns (uint256 total) {
+        return _userPools[user].length;
+    }
+
+    /// @inheritdoc IDistributor
+    function getUserPools(
+        address user,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (Pool[] memory pools) {
+        if (offset > _userPools[user].length) {
+            return new Pool[](0);
+        } else if (offset + limit > _userPools[user].length) {
+            limit = _userPools[user].length - offset;
+        }
+
+        pools = new Pool[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            pools[i] = _pools[_userPools[user][i + offset]];
         }
     }
 
-    /// @inheritdoc IDistributor
-    function getPoolBalance(
+    /// @notice Checks if all members have joined a pool (no address(0) slots remaining)
+    /// @param poolId The pool identifier
+    /// @return joined True if all members have joined
+    function _allMembersJoined(
         uint256 poolId
-    ) external view returns (uint256 totalBalance) {
-        Pool storage pool = _pools[poolId];
-        if (pool.id == 0) revert PoolNotFound(poolId);
-        return pool.totalBalance;
-    }
+    ) private view returns (bool joined) {
+        Member[] storage members = _poolMembers[poolId];
 
-    /// @inheritdoc IDistributor
-    function getNextPoolId() external view returns (uint256 nextPoolId) {
-        return _nextPoolId;
-    }
+        for (uint256 i = 0; i < members.length; i++) {
+            if (members[i].member == address(0)) {
+                return false;
+            }
+        }
 
-    /// @inheritdoc IDistributor
-    function getUSDCAddress() external view returns (address usdcAddress) {
-        return address(usdc);
+        return true;
     }
 }

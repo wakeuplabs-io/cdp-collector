@@ -5,71 +5,97 @@ import {IDistributorErrors} from "./IDistributor.errors.sol";
 import {IDistributorEvents} from "./IDistributor.events.sol";
 import {IDistributorStructs} from "./IDistributor.structs.sol";
 
-interface IDistributor is IDistributorErrors, IDistributorEvents, IDistributorStructs {
+interface IDistributor is
+    IDistributorErrors,
+    IDistributorEvents,
+    IDistributorStructs
+{
     /// @notice Creates a new fundraising pool
     /// @param title The title of the pool
     /// @param description The description of the pool
     /// @param imageUri The URI of the pool's image
-    /// @param members Array of member addresses (use address(0) for invitation slots)
-    /// @param percentages Array of percentages for each member (in basis points, 1% = 100)
+    /// @param percentages Array of percentages for invitation slots (in basis points, 1% = 100)
     /// @param invitationCodes Array of hashed invitation codes for each slot
     /// @return poolId The unique identifier of the created pool
+    /// @dev Creator is automatically added with percentage = 10000 - sum(percentages)
+    /// @dev All other members must join using invitation codes
     function createPool(
         string calldata title,
         string calldata description,
         string calldata imageUri,
-        address[] calldata members,
-        uint256[] calldata percentages,
-        bytes32[] calldata invitationCodes
+        bytes32[] calldata invitationCodes,
+        uint256[] calldata percentages
     ) external returns (uint256 poolId);
-
-
-    /// @notice Joins a pool using invitation code (claims an address(0) slot)
-    /// @param poolId The pool identifier
-    /// @param invitationCode The invitation code for the slot
-    function joinPool(uint256 poolId, string calldata invitationCode) external;
-
-    /// @notice Donates USDC to a specific pool
-    /// @param poolId The pool identifier
-    /// @param amount The amount to donate in USDC
-    function donate(uint256 poolId, uint256 amount) external;
-
-    /// @notice Withdraws available funds from a pool (only members can call)
-    /// @param poolId The pool identifier
-    /// @param amount The amount to withdraw in USDC
-    /// @param recipient The address to receive the funds
-    function withdraw(uint256 poolId, uint256 amount, address recipient) external;
-
-    /// @notice Deactivates a pool (only creator can call)
-    /// @param poolId The pool identifier
-    function deactivatePool(uint256 poolId) external;
 
     /// @notice Gets pool information
     /// @param poolId The pool identifier
     /// @return pool The pool struct
     function getPool(uint256 poolId) external view returns (Pool memory pool);
 
-    /// @notice Gets all members of a pool with their information
+    /// @notice Gets the number of members in a pool
     /// @param poolId The pool identifier
+    /// @return total The number of members in the pool
+    function getPoolMembersCount(
+        uint256 poolId
+    ) external view returns (uint256 total);
+
+    /// @notice Gets members of a pool with their information (paginated)
+    /// @param poolId The pool identifier
+    /// @param offset Starting index for pagination (0-based)
+    /// @param limit Maximum number of members to return
     /// @return members Array of member information
-    function getPoolMembers(uint256 poolId) external view returns (Member[] memory members);
+    function getPoolMembers(
+        uint256 poolId,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (Member[] memory members);
 
-    /// @notice Gets the available balance for a specific member in a pool
+    /// @notice Gets the number of pools that a user is a member of
+    /// @param user The address to check membership for
+    /// @return total The number of pools the user is a member of
+    function getUserPoolsCount(
+        address user
+    ) external view returns (uint256 total);
+
+    /// @notice Gets pool IDs that a user is a member of (paginated)
+    /// @param user The address to check membership for
+    /// @param offset Starting index for pagination (0-based)
+    /// @param limit Maximum number of pool IDs to return
+    /// @return pools Array of pool IDs where the user is a member
+    function getUserPools(
+        address user,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (Pool[] memory pools);
+
+    /// @notice Joins a pool using invitation code (claims an address(0) slot)
     /// @param poolId The pool identifier
-    /// @param member The member address
-    /// @return availableAmount The amount available for withdrawal
-    function getAvailableBalance(uint256 poolId, address member) external view returns (uint256 availableAmount);
+    /// @param invitationCode The invitation code for the slot
+    function joinPool(uint256 poolId, string calldata invitationCode) external;
 
-    /// @notice Gets the total balance of a pool
+    /// @notice Deactivates a pool (only creator can call)
     /// @param poolId The pool identifier
-    /// @return totalBalance The current total balance of the pool
-    function getPoolBalance(uint256 poolId) external view returns (uint256 totalBalance);
+    function deactivatePool(uint256 poolId) external;
 
-    /// @notice Gets the next available pool ID
-    /// @return nextPoolId The next pool ID that will be assigned
-    function getNextPoolId() external view returns (uint256 nextPoolId);
+    /// @notice Donates USDC to a specific pool
+    /// @param poolId The pool identifier
+    /// @param amount The amount to donate in USDC
+    function donate(uint256 poolId, uint256 amount) external;
 
-    /// @notice Gets the USDC token address
-    /// @return usdcAddress The address of the USDC token contract
-    function getUSDCAddress() external view returns (address usdcAddress);
+    /// @notice Gets the total number of donations
+    /// @param poolId The pool identifier
+    /// @return total The total number of donations
+    function getDonationsCount(
+        uint256 poolId
+    ) external view returns (uint256 total);
+
+    /// @notice Gets the available balance for a specific member
+    /// @param user The member address
+    /// @return balance The amount available for withdrawal
+    function getBalanceOf(address user) external view returns (uint256 balance);
+
+    /// @notice Withdraws available funds
+    /// @param amount The amount to withdraw in USDC
+    /// @param recipient The address to receive the funds
+    function withdraw(uint256 amount, address recipient) external;
 }

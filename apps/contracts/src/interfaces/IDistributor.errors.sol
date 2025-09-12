@@ -57,4 +57,7 @@ interface IDistributorErrors {
     
     /// @notice Thrown when trying to join a slot that's already filled
     error SlotAlreadyFilled();
+    
+    /// @notice Thrown when trying to donate to a pool that's still pending (not all members joined)
+    error PoolPending(uint256 poolId);
 }

@@ -3,10 +3,10 @@
 
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const CollectorModule = buildModule("CollectorModule", (m) => {
-  const lock = m.contract("Collector", [], {});
+const DistributorModule = buildModule("DistributorModule", (m) => {
+  const lock = m.contract("Distributor", [], {});
 
   return { lock };
 });
 
-export default CollectorModule;
+export default DistributorModule;

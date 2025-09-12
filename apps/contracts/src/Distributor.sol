@@ -114,13 +114,13 @@ contract Distributor is IDistributor {
         if (pool.status == PoolStatus.INACTIVE) revert PoolInactive(poolId);
         if (_isMember[poolId][msg.sender]) revert MemberAlreadyInPool();
 
+        bytes32 providedHash = keccak256(abi.encodePacked(invitationCode));
+
         // Find slot with matching invitation code hash
         Member[] storage members = _poolMembers[poolId];
         bool slotFound = false;
         uint256 slotIndex;
         uint256 slotPercentage;
-
-        bytes32 providedHash = keccak256(abi.encodePacked(invitationCode));
 
         for (uint256 i = 0; i < members.length; i++) {
             if (
@@ -254,7 +254,6 @@ contract Distributor is IDistributor {
     ) public view returns (uint256 availableAmount) {
         return _balances[member];
     }
-
 
     /// @inheritdoc IDistributor
     function getDonationsCount(

@@ -21,6 +21,7 @@ interface IDistributorStructs {
 
     struct Member {
         address memberAddress;
+        bytes32 invitationCodeHash;
         uint256 percentage; // Basis points (1% = 100, 100% = 10000)
         uint256 totalWithdrawn;
     }

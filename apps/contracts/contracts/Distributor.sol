@@ -33,10 +33,12 @@ contract Distributor is IDistributor {
         string calldata description,
         string calldata imageUri,
         address[] calldata members,
-        uint256[] calldata percentages
+        uint256[] calldata percentages,
+        bytes32[] calldata invitationCodes
     ) external returns (uint256 poolId) {
         if (bytes(title).length == 0) revert EmptyTitle();
         if (members.length != percentages.length) revert ArrayLengthMismatch();
+        if (members.length != invitationCodes.length) revert ArrayLengthMismatch();
 
         // Calculate total percentage for members
         uint256 totalMemberPercentage = 0;
@@ -52,11 +54,11 @@ contract Distributor is IDistributor {
             revert InvalidTotalPercentage(totalMemberPercentage);
         }
 
-        // Ensure creator percentage is not zero
-        uint256 creatorPercentage = 10000 - totalMemberPercentage;
-        if (creatorPercentage == 0) {
-            revert InvalidCreatorPercentage();
-        }
+        // // Ensure creator percentage is not zero
+        // uint256 creatorPercentage = 10000 - totalMemberPercentage;
+        // if (creatorPercentage == 0) {
+        //     revert InvalidCreatorPercentage();
+        // }
 
         // Increment pool ID
         poolId = _nextPoolId++;
@@ -78,26 +80,30 @@ contract Distributor is IDistributor {
         _poolMembers[poolId].push(
             Member({
                 memberAddress: msg.sender,
-                percentage: creatorPercentage,
-                totalWithdrawn: 0
+                percentage: 10000 - totalMemberPercentage,
+                totalWithdrawn: 0,
+                invitationCodeHash: bytes32(0) // Creator doesn't need invitation code
             })
         );
         _memberIndices[poolId][msg.sender] = 0;
         _isMember[poolId][msg.sender] = true;
 
-        // Add other members
+        // Add other members (including address(0) placeholder slots)
         for (uint256 i = 0; i < members.length; i++) {
             _poolMembers[poolId].push(
                 Member({
                     memberAddress: members[i],
                     percentage: percentages[i],
-                    totalWithdrawn: 0
+                    totalWithdrawn: 0,
+                    invitationCodeHash: invitationCodes[i]
                 })
             );
-            _memberIndices[poolId][members[i]] =
-                _poolMembers[poolId].length -
-                1;
-            _isMember[poolId][members[i]] = true;
+            
+            if (members[i] != address(0)) {
+                _memberIndices[poolId][members[i]] =
+                    _poolMembers[poolId].length - 1;
+                _isMember[poolId][members[i]] = true;
+            }
         }
 
         emit PoolCreated(
@@ -105,9 +111,44 @@ contract Distributor is IDistributor {
             msg.sender,
             title,
             description,
-            imageUri,
-            creatorPercentage
+            imageUri
         );
+    }
+
+    /// @inheritdoc IDistributor
+    function joinPool(uint256 poolId, string calldata invitationCode) external {
+        Pool storage pool = _pools[poolId];
+        if (pool.id == 0) revert PoolNotFound(poolId);
+        if (!pool.active) revert PoolInactive(poolId);
+        if (_isMember[poolId][msg.sender]) revert MemberAlreadyInPool();
+        
+        // Find slot with matching invitation code hash
+        Member[] storage members = _poolMembers[poolId];
+        bool slotFound = false;
+        uint256 slotIndex;
+        uint256 slotPercentage;
+        
+        bytes32 providedHash = keccak256(abi.encodePacked(invitationCode));
+        
+        for (uint256 i = 0; i < members.length; i++) {
+            if (members[i].memberAddress == address(0) && 
+                members[i].invitationCodeHash == providedHash &&
+                members[i].invitationCodeHash != bytes32(0)) {
+                slotIndex = i;
+                slotPercentage = members[i].percentage;
+                slotFound = true;
+                break;
+            }
+        }
+        
+        if (!slotFound) revert InvalidInvitationCode();
+        
+        // Assign member to the slot
+        members[slotIndex].memberAddress = msg.sender;
+        _memberIndices[poolId][msg.sender] = slotIndex;
+        _isMember[poolId][msg.sender] = true;
+        
+        emit MemberJoined(poolId, msg.sender, slotPercentage);
     }
 
     /// @inheritdoc IDistributor
@@ -191,6 +232,7 @@ contract Distributor is IDistributor {
         for (uint256 i = 0; i < poolMembers.length; i++) {
             members[index] = Member({
                 memberAddress: poolMembers[i].memberAddress,
+                invitationCodeHash: poolMembers[i].invitationCodeHash,
                 percentage: poolMembers[i].percentage,
                 totalWithdrawn: poolMembers[i].totalWithdrawn
             });

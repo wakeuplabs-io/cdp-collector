@@ -10,17 +10,24 @@ interface IDistributor is IDistributorErrors, IDistributorEvents, IDistributorSt
     /// @param title The title of the pool
     /// @param description The description of the pool
     /// @param imageUri The URI of the pool's image
-    /// @param members Array of member addresses
+    /// @param members Array of member addresses (use address(0) for invitation slots)
     /// @param percentages Array of percentages for each member (in basis points, 1% = 100)
+    /// @param invitationCodes Array of hashed invitation codes for each slot
     /// @return poolId The unique identifier of the created pool
     function createPool(
         string calldata title,
         string calldata description,
         string calldata imageUri,
         address[] calldata members,
-        uint256[] calldata percentages
+        uint256[] calldata percentages,
+        bytes32[] calldata invitationCodes
     ) external returns (uint256 poolId);
 
+
+    /// @notice Joins a pool using invitation code (claims an address(0) slot)
+    /// @param poolId The pool identifier
+    /// @param invitationCode The invitation code for the slot
+    function joinPool(uint256 poolId, string calldata invitationCode) external;
 
     /// @notice Donates USDC to a specific pool
     /// @param poolId The pool identifier

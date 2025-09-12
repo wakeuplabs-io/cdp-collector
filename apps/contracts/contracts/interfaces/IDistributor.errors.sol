@@ -45,4 +45,16 @@ interface IDistributorErrors {
 
     /// @notice Thrown when creator percentage is zero
     error InvalidCreatorPercentage();
+    
+    /// @notice Thrown when invitation code is incorrect
+    error InvalidInvitationCode();
+    
+    /// @notice Thrown when trying to join a slot that doesn't have invitation code
+    error NoInvitationCodeForSlot();
+    
+    /// @notice Thrown when member is already in the pool
+    error MemberAlreadyInPool();
+    
+    /// @notice Thrown when trying to join a slot that's already filled
+    error SlotAlreadyFilled();
 }

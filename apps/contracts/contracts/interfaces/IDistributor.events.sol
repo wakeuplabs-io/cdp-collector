@@ -15,14 +15,12 @@ interface IDistributorEvents {
     /// @param title The title of the pool
     /// @param description The description of the pool
     /// @param imageUri The URI of the pool's image
-    /// @param creatorPercentage The percentage allocated to the creator
     event PoolCreated(
         uint256 indexed poolId,
         address indexed creator,
         string title,
         string description,
-        string imageUri,
-        uint256 creatorPercentage
+        string imageUri
     );
 
 
@@ -56,6 +54,16 @@ interface IDistributorEvents {
     event PoolDeactivated(
         uint256 indexed poolId,
         address indexed deactivatedBy
+    );
+
+    /// @notice Emitted when someone joins a pool using invitation code
+    /// @param poolId The pool identifier
+    /// @param member The address of the member who joined
+    /// @param percentage The percentage they received
+    event MemberJoined(
+        uint256 indexed poolId,
+        address indexed member,
+        uint256 percentage
     );
 
 }

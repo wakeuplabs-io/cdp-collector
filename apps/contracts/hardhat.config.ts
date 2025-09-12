@@ -12,6 +12,9 @@ const config: HardhatUserConfig = {
       viaIR: true,
     },
   },
+  paths: {
+    sources: "./src",
+  },
 };
 
 export default config;

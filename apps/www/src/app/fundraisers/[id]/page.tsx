@@ -1,28 +1,48 @@
 "use client";
 
 import { AccountManager } from "@/components/account-manager";
+import { Avatar } from "@/components/avatar";
+import { DonationCard } from "@/components/donations/card";
+import { FundraiserStatus } from "@/components/fundraisers/status";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDonations, usePool, usePoolMembers, usePoolSummary } from "@/hooks/distributor";
+import { shortenAddress } from "@/lib/utils";
+import { PoolStatus } from "@/types/distributor";
 import { useCurrentUser, useIsInitialized } from "@coinbase/cdp-hooks";
 import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
-import { ArrowUpRightIcon, EllipsisVerticalIcon, MoveLeftIcon } from "lucide-react";
-import Image from "next/image";
+import {
+  DollarSign,
+  EllipsisVerticalIcon,
+  MoveLeftIcon,
+  UsersIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
-export default function FundraiserDetails() {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
   const router = useRouter();
 
   const { currentUser } = useCurrentUser();
   const { isInitialized } = useIsInitialized();
+
+  const { pool, isLoading: isPoolLoading } = usePool(id as string);
+  const { poolSummary, isLoading: isLoadingPoolSummary } = usePoolSummary(
+    id as string
+  );
+  const { donations, isLoading: isLoadingDonations } = useDonations(
+    id as string
+  );
+  const { poolMembers, isLoading: isLoadingPoolMembers } = usePoolMembers(
+    id as string
+  );
 
   useEffect(() => {
     if (!currentUser && isInitialized) {
@@ -30,6 +50,21 @@ export default function FundraiserDetails() {
     }
   }, [currentUser, isInitialized]);
 
+  const totalDonationsAmount = poolSummary?.totalDonationsAmount ?? 0n;
+  const totalDonationsCount = poolSummary?.totalDonationsCount ?? 0n;
+  const uniqueDonatorsCount = poolSummary?.uniqueDonatorsCount ?? 0n;
+  const averageDonation =
+    totalDonationsCount === 0n
+      ? 0n
+      : totalDonationsAmount / totalDonationsCount;
+
+  if (isPoolLoading || isLoadingPoolSummary || isLoadingPoolMembers) {
+    return (
+      <div className="min-h-screen min-w-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
   return (
     <div>
       <nav className="border-b">
@@ -49,35 +84,40 @@ export default function FundraiserDetails() {
 
       <div className="max-w-6xl mx-auto py-14 relative">
         <div className="absolute -top-[60px] left-0 -translate-y-1 rounded-md overflow-hidden border">
-          <Image src="/avatar.webp" alt="Fundraiser" width={100} height={100} />
+          <Avatar src={pool?.imageUri ?? undefined} alt="Fundraiser" size={100} seed={pool?.creator} className="rounded-lg" />
         </div>
 
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Fundraiser title</h1>
-            <p className="text-muted-foreground">
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Libero
-              iste itaque aspernatur voluptates dolore necessitatibus nulla
-              accusantium rerum amet consequatur voluptate veniam iure aliquam,
-              blanditiis, ab consectetur architecto odio suscipit.
-            </p>
+            <div className="flex gap-2 items-center">
+              <h1 className="text-2xl font-bold">{pool?.title}</h1>
+              <FundraiserStatus status={pool?.status ?? PoolStatus.PENDING} />
+            </div>
+            <p className="text-muted-foreground">{pool?.description}</p>
           </div>
 
           <div className="flex items-center gap-2">
+            <Button>Copy Collector Link</Button>
             <DropdownMenu>
-              <DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-9 w-9 rounded-full">
                   <EllipsisVerticalIcon className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuLabel>Fundraiser</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Copy Link</DropdownMenuItem>
-                <DropdownMenuItem>Team</DropdownMenuItem>
                 <DropdownMenuItem>Deactivate</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+        </div>
+
+        <div className="bg-muted flex rounded-xl p-6 mt-10 gap-4">
+          <div className="p-4 bg-background rounded-xl w-min">
+            <UsersIcon className="w-5 h-5 text-blue-500" />
+          </div>
+          <div>
+            <h1 className="font-bold">Members</h1>
+            <p>{poolMembers.map((member) => `${shortenAddress(member.member)} ${member.percentage / 100n}%`).join(" | ")}</p>
           </div>
         </div>
 
@@ -86,7 +126,7 @@ export default function FundraiserDetails() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold">10 USDC</p>
+            <p className="text-2xl font-bold">{totalDonationsAmount} USDC</p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donations
             </h2>
@@ -96,7 +136,7 @@ export default function FundraiserDetails() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
-            <p className="text-2xl font-bold">10 USDC</p>
+            <p className="text-2xl font-bold">{averageDonation} USDC</p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation
             </h2>
@@ -106,7 +146,7 @@ export default function FundraiserDetails() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <ChartBarIcon className="w-5 h-5 text-orange-500" />
             </div>
-            <p className="text-2xl font-bold">10</p>
+            <p className="text-2xl font-bold">{uniqueDonatorsCount}</p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donators
             </h2>
@@ -117,51 +157,24 @@ export default function FundraiserDetails() {
           <h1 className="text-2xl font-bold">Donations</h1>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-10">
-          <FundraiserCard />
-          <FundraiserCard />
-        </div>
-
-        {/* <div className="mt-10 border rounded-xl px-6 py-20 text-center">
-          <div className="bg-muted rounded-xl mb-4 h-10 w-10 flex items-center justify-center mx-auto">
-            <DollarSign className="w-4 h-4" />
+        {donations?.length ? (
+          <div className="grid grid-cols-3 gap-4 mt-10">
+            {donations.map((donation) => (
+              <DonationCard key={donation.id} donation={donation} />
+            ))}
           </div>
+        ) : (
+          <div className="mt-10 border rounded-xl px-6 py-20 text-center">
+            <div className="bg-muted rounded-xl mb-4 h-10 w-10 flex items-center justify-center mx-auto">
+              <DollarSign className="w-4 h-4" />
+            </div>
 
-          <h2 className="text-xl font-bold">No donations yet</h2>
-          <p className="text-muted-foreground text-sm">
-            Your donations will appear here <br /> once people start donating.
-          </p>
-        </div> */}
-      </div>
-    </div>
-  );
-}
-
-function FundraiserCard() {
-  return (
-    <div className="border rounded-xl p-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">0x12...7890</h2>
-        <ArrowUpRightIcon className="w-4 h-4" />
-      </div>
-
-      <div className="bg-muted/50 rounded-xl p-4 mt-4 flex items-center justify-between">
-        <span className="font-bold text-2xl">$100</span>
-        <span className="text-muted-foreground border rounded-full bg-muted px-2 py-1 text-sm font-medium">
-          100 USDC
-        </span>
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">Created</p>
-          <p className="text-sm font-medium">10/10/2025</p>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">Receipt</p>
-          <p className="text-sm font-medium">0x1234567890</p>
-        </div>
+            <h2 className="text-xl font-bold">No donations yet</h2>
+            <p className="text-muted-foreground text-sm">
+              Your donations will appear here <br /> once people start donating.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

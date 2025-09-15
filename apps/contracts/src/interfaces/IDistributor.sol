@@ -50,6 +50,21 @@ interface IDistributor is
         uint256 limit
     ) external view returns (Member[] memory members);
 
+    /// @notice Gets the summary of a pool
+    /// @param poolId The pool identifier
+    /// @return summary The summary of the pool
+    function getPoolSummary(
+        uint256 poolId
+    ) external view returns (PoolSummary memory summary);
+
+    /// @notice Gets the summary of a user
+    /// @param user The address of the user
+    /// @return summary The summary of the user
+    function getUserSummary(
+        address user
+    ) external view returns (UserSummary memory summary);
+
+
     /// @notice Gets the number of pools that a user is a member of
     /// @param user The address to check membership for
     /// @return total The number of pools the user is a member of
@@ -81,13 +96,6 @@ interface IDistributor is
     /// @param poolId The pool identifier
     /// @param amount The amount to donate in USDC
     function donate(uint256 poolId, uint256 amount) external;
-
-    /// @notice Gets the total number of donations
-    /// @param poolId The pool identifier
-    /// @return total The total number of donations
-    function getDonationsCount(
-        uint256 poolId
-    ) external view returns (uint256 total);
 
     /// @notice Gets the available balance for a specific member
     /// @param user The member address

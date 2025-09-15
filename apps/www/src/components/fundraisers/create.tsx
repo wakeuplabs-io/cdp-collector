@@ -1,45 +1,40 @@
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CopyIcon, UploadCloudIcon, XIcon } from "lucide-react";
+import { useCreatePool } from "@/hooks/distributor";
+import { useEvmAddress } from "@coinbase/cdp-hooks";
+import { PlusIcon, UploadCloudIcon, XIcon } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
+import { Avatar } from "../avatar";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "../ui/form";
+import { CopyButton } from "../ui/copy";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 
 const metadataForm = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
+  title: z.string().min(1, { message: "Title is required" }),
+  description: z.string().min(1, { message: "Description is required" }),
 });
 
-const membersForm = z.object({
-  members: z
-    .array(
-      z.object({
-        identifier: z.string().min(1, "Required"), // wallet or email
-        proportion: z.string().min(1, "Required"),
-      })
-    )
-    .min(1, "At least one participant required"),
+const memberForm = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  proportion: z
+    .string()
+    .min(1, { message: "Proportion is required" })
+    .refine((val) => Number(val) > 0 && Number(val) <= 100, {
+      message: "Proportion must be between 0 and 100",
+    }),
 });
 
 export const CreateFundraiser = ({
@@ -47,54 +42,104 @@ export const CreateFundraiser = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const router = useRouter();
+  const { evmAddress } = useEvmAddress();
   const [open, setOpen] = useState<boolean>(false);
-  const [tab, setTab] = useState<"create" | "invite" | "success">("create");
-  const [id, setId] = useState<string>("");
-  const [proportion, setProportion] = useState<string>("");
   const [shared, setShared] = useState<boolean>(false);
-
-  const metadata = useForm<z.infer<typeof metadataForm>>({
-    resolver: zodResolver(metadataForm),
-    defaultValues: {
-      title: "",
-      description: "",
-    },
+  const [tab, setTab] = useState<"create" | "invite" | "success">("create");
+  const [newMemberEmail, setNewMemberEmail] = useState<string>("");
+  const [newMemberProportion, setNewMemberProportion] = useState<string>("");
+  const [metadata, setMetadata] = useState<{
+    title: string;
+    description: string;
+    image: File | null;
+  }>({
+    title: "",
+    description: "",
+    image: null,
   });
+  const [members, setMembers] = useState<
+    {
+      email: string;
+      proportion: number;
+      code?: string;
+    }[]
+  >([]);
+  const [errors, setErrors] = useState<string[]>([]);
+const [poolId, setPoolId] = useState<string | null>(null);
+  const { createPool, isPending: isCreatingPool } = useCreatePool();
 
-  const members = useForm<z.infer<typeof membersForm>>({
-    resolver: zodResolver(membersForm),
-    defaultValues: {
-      members: [],
-    },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: members.control,
-    name: "members",
-  });
-
-  function onSubmitMetadata(values: z.infer<typeof metadataForm>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  function onSubmitMetadata() {
+    const result = metadataForm.safeParse(metadata);
+    if (!result.success) {
+      setErrors(result.error.errors.map((e) => e.message));
+      return;
+    }
+    setErrors([]);
     setTab("invite");
   }
 
-  function onSubmitMembers(values: z.infer<typeof membersForm>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-    setTab("success");
+  function onAddMember() {
+    const result = memberForm.safeParse({
+      email: newMemberEmail,
+      proportion: newMemberProportion,
+    });
+    // TODO: check members doesn't already include the email
+
+    if (!result.success) {
+      setErrors(result.error.errors.map((e) => e.message));
+      return;
+    }
+
+    setErrors([]);
+    setNewMemberEmail("");
+    setNewMemberProportion("0");
+    setMembers([
+      ...members,
+      { email: newMemberEmail, proportion: Number(newMemberProportion) },
+    ]);
+  }
+
+  function onCreate() {
+    createPool({
+      title: metadata.title,
+      description: metadata.description,
+      image: undefined,
+      members,
+    }).then(({ hash, poolId }) => {
+      console.log("poolId", poolId, hash)
+      setPoolId(poolId.toString())
+      setTab("success");
+      toast.success("Fundraiser created successfully", {
+        description: `Transaction hash: ${hash}`,
+      });
+      
+    }).catch((error) => {
+      console.log("error", error)
+      toast.error("Couldn't create fundraiser", {
+        description: error.message,
+      });
+    });
   }
 
   useEffect(() => {
     if (open) {
+      setErrors([]);
+      setNewMemberEmail("");
+      setNewMemberProportion("0");
+      setMembers([]);
+      setMetadata({ title: "", description: "", image: null });
       setTab("create");
       setShared(false);
-      metadata.reset();
-      members.reset();
     }
   }, [open]);
+
+  const creatorProportion = useMemo(() => {
+    return (
+      100 -
+      members.reduce((acc, member) => acc + member.proportion, 0)
+    );
+  }, [members]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -103,82 +148,95 @@ export const CreateFundraiser = ({
         {tab === "create" && (
           <>
             <DialogHeader className="p-6 border-b">
-              <DialogTitle>Create Fundraiser</DialogTitle>
+              <DialogTitle>Create Collector Link</DialogTitle>
               <DialogDescription>
                 Create a new fundraiser to help a cause you care about.
               </DialogDescription>
             </DialogHeader>
 
-            <Form {...metadata}>
-              <form onSubmit={metadata.handleSubmit(onSubmitMetadata)}>
-                <div className="px-6 pt-4 pb-6 space-y-4">
-                  <FormField
-                    control={metadata.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Title" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <div className="px-6 pt-4 pb-6 space-y-4">
+              <Label>Title</Label>
+              <Input
+                placeholder="Title"
+                value={metadata.title}
+                onChange={(e) =>
+                  setMetadata({ ...metadata, title: e.target.value })
+                }
+              />
 
-                  <FormField
-                    control={metadata.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            className="h-24"
-                            placeholder="Description"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+              <Label>Description</Label>
+              <Textarea
+                className="h-24"
+                placeholder="Description"
+                value={metadata.description}
+                onChange={(e) =>
+                  setMetadata({ ...metadata, description: e.target.value })
+                }
+              />
 
-                  <div>
-                    <FormLabel>Image</FormLabel>
-                    <Image
-                      src="/avatar.webp"
-                      alt="Fundraiser"
-                      width={60}
-                      height={60}
-                      className="rounded-full mt-3"
-                    />
+              <div>
+                <Label>Image</Label>
+                <Avatar
+                  className="mt-3"
+                  src={
+                    metadata.image
+                      ? URL.createObjectURL(metadata.image)
+                      : undefined
+                  }
+                  alt="Fundraiser"
+                  size={60}
+                  seed={evmAddress ?? undefined}
+                />
 
-                    <div className="p-4 rounded-md border mt-4 text-center">
-                      <div className="h-10 w-10 border rounded-md flex justify-center items-center mx-auto mb-3">
-                        <UploadCloudIcon className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="font-medium text-primary hover:underline text-sm">
-                        Click to upload and attach files
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        SVG, PNG, JPG or GIF (max. 800x400px)
-                      </div>
-                    </div>
+                <input
+                  type="file"
+                  id="image"
+                  className="hidden"
+                  onChange={(e) =>
+                    setMetadata({
+                      ...metadata,
+                      image: e.target.files?.[0] ?? null,
+                    })
+                  }
+                />
+
+                <label
+                  className="p-4 rounded-md border mt-4 text-center block"
+                  htmlFor="image"
+                >
+                  <div className="h-10 w-10 border rounded-md flex justify-center items-center mx-auto mb-3">
+                    <UploadCloudIcon className="h-4 w-4 text-primary" />
                   </div>
-                </div>
+                  <div className="font-medium text-primary hover:underline text-sm">
+                    Click to upload and attach files
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    SVG, PNG, JPG or GIF (max. 800x400px)
+                  </div>
+                </label>
+              </div>
+            </div>
 
-                <div className="flex justify-end gap-2 mt-4 border-t p-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => metadata.reset()}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Continue</Button>
-                </div>
-              </form>
-            </Form>
+            {errors.length ? (
+              <div className="mx-6">
+                {errors.map((error) => (
+                  <div key={error} className="text-destructive">
+                    {error}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="flex justify-end gap-2 mt-4 border-t p-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={onSubmitMetadata}>Continue</Button>
+            </div>
           </>
         )}
 
@@ -191,91 +249,100 @@ export const CreateFundraiser = ({
               </DialogDescription>
             </DialogHeader>
 
-            <Form {...members}>
-              <form onSubmit={members.handleSubmit(onSubmitMembers)}>
-                <div className="px-6 flex gap-2 mt-2">
-                  <Input
-                    className="h-11"
-                    placeholder="Address or email"
-                    value={id}
-                    onChange={(e) => setId(e.target.value)}
-                  />
-                  <Input
-                    placeholder="0%"
-                    className="max-w-14 h-11"
-                    value={proportion}
-                    onChange={(e) => setProportion(e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-11 px-5"
-                    onClick={() => {
-                      append({ identifier: id, proportion });
-                      setId("");
-                      setProportion("0");
-                    }}
-                  >
-                    Add
-                  </Button>
-                </div>
+            <div className="px-6 flex gap-2 mt-2">
+              <div className="flex items-center flex-1">
+                <Input
+                  className="h-11 rounded-r-none border-r-0"
+                  placeholder="Email address"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                />
+                <Input
+                  placeholder="0%"
+                  className="max-w-14 h-11 rounded-l-none"
+                  value={newMemberProportion}
+                  onChange={(e) => setNewMemberProportion(e.target.value)}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 px-5 rounded-full"
+                onClick={onAddMember}
+              >
+                <PlusIcon className="w-4 h-4" />
+              </Button>
+            </div>
 
-                <div className="px-6 mt-4 space-y-2">
-                  <MemberItem
-                    member={{ identifier: "You", proportion: "0" }}
-                    action={
-                      <Button
-                        onClick={() =>
-                          window.alert("You cannot remove yourself")
-                        }
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                      >
-                        <XIcon className="w-4 h-4" />
-                      </Button>
-                    }
-                  />
-                  {fields.map((field, index) => (
-                    <MemberItem
-                      key={field.id}
-                      member={field}
-                      action={
-                        <Button
-                          onClick={() => remove(index)}
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <XIcon className="w-4 h-4" />
-                        </Button>
+            <div className="px-6 mt-4 space-y-2">
+              <MemberItem
+                member={{
+                  email: "You",
+                  proportion: creatorProportion,
+                }}
+                action={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 disabled:opacity-20 disabled:cursor-not-allowed"
+                    disabled
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </Button>
+                }
+              />
+              {members.map((member, index) => (
+                <MemberItem
+                  key={member.email}
+                  member={member}
+                  action={
+                    <Button
+                      onClick={() =>
+                        setMembers(members.filter((_, i) => i !== index))
                       }
-                    />
-                  ))}
-                </div>
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                    >
+                      <XIcon className="w-4 h-4" />
+                    </Button>
+                  }
+                />
+              ))}
+            </div>
 
-                <div className="flex justify-end gap-2 mt-6 border-t p-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      metadata.reset();
-                      setTab("create");
-                    }}
-                  >
-                    Back
-                  </Button>
-                  <Button type="submit">Create</Button>
-                </div>
-              </form>
-            </Form>
+            {errors.length ? (
+              <div className="mx-6">
+                {errors.map((error) => (
+                  <div key={error} className="text-destructive">
+                    {error}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="flex justify-end gap-2 mt-6 border-t p-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setMetadata({ title: "", description: "", image: null });
+                  setTab("create");
+                }}
+              >
+                Back
+              </Button>
+              <Button onClick={onCreate} disabled={isCreatingPool}>
+                {isCreatingPool ? "Creating..." : "Continue"}
+              </Button>
+            </div>
           </>
         )}
 
         {tab === "success" && (
           <>
             <DialogHeader className="p-6 border-b">
-              <DialogTitle>Success!</DialogTitle>
+              <DialogTitle>Ask members to join</DialogTitle>
               <DialogDescription>
                 Your fundraiser has been created successfully. Just one step
                 missing, invite your friends to join you.
@@ -284,26 +351,33 @@ export const CreateFundraiser = ({
 
             <div className="px-6 mt-4 space-y-2">
               <MemberItem
-                member={{ identifier: "You", proportion: "0" }}
+                member={{
+                  email: "You",
+                  proportion: creatorProportion,
+                }}
                 action={
                   <div className="text-sm text-muted-foreground">Joined</div>
                 }
               />
-              {fields.map((field, index) => (
+              {members.map((member, index) => (
                 <MemberItem
-                  key={field.id}
-                  member={field}
+                  key={member.email}
+                  member={member}
                   action={
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <CopyIcon className="w-4 h-4 text-muted-foreground" />
-                    </Button>
+                    <CopyButton
+                      text={`${window.location.origin}/fundraisers/${member.email}/join`}
+                      className="h-8 w-8"
+                    />
                   }
                 />
               ))}
             </div>
 
             <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 mx-6">
-              <Checkbox checked={shared} onCheckedChange={(checked) => setShared(!!checked)} />
+              <Checkbox
+                checked={shared}
+                onCheckedChange={(checked) => setShared(!!checked)}
+              />
               <div className="grid gap-1.5 font-normal">
                 <p className="text-sm leading-none font-medium">
                   I have shared invitation links
@@ -315,7 +389,10 @@ export const CreateFundraiser = ({
             </Label>
 
             <div className="flex justify-end gap-2 mt-6 border-t p-6">
-              <Button type="submit" disabled={!shared}>
+              <Button disabled={!shared} onClick={() => {
+                setOpen(false);
+                router.push(`/fundraisers/${poolId}`)
+              }}>
                 Done
               </Button>
             </div>
@@ -330,7 +407,7 @@ const MemberItem = ({
   member,
   action,
 }: {
-  member: z.infer<typeof membersForm>["members"][number];
+  member: { email: string; proportion: number; code?: string };
   action?: React.ReactNode;
 }) => {
   return (
@@ -344,7 +421,7 @@ const MemberItem = ({
           className="rounded-full"
         />
         <div className="flex gap-2">
-          <div className="text-sm">{member.identifier}</div>
+          <div className="text-sm">{member.email}</div>
           <div className="text-sm text-muted-foreground">
             {member.proportion}%
           </div>

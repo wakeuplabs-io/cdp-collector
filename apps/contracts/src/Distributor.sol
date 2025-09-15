@@ -13,11 +13,15 @@ contract Distributor is IDistributor {
 
     /// @notice Mapping from pool ID to pool data
     mapping(uint256 => Pool) private _pools;
+    
+    /// @notice Mapping from pool ID to pool summary
+    mapping(uint256 => PoolSummary) private _poolSummaries;
+    
+    /// @notice Mapping from pool ID to mapping from address to bool if they are a donator
+    mapping(uint256 => mapping(address => bool)) private _isDonator;
 
     /// @notice Mapping from pool ID to array of members
     mapping(uint256 => Member[]) private _poolMembers;
-
-    mapping(uint256 => mapping(address => bool)) private _isDonator;
 
     /// @notice Mapping from user address to pool ids they are a member of
     mapping(address => uint256[]) private _userPools;
@@ -74,13 +78,15 @@ contract Distributor is IDistributor {
             title: title,
             description: description,
             imageUri: imageUri,
-            totalDonationsAmount: 0,
-            totalDonationsCount: 0,
-            uniqueDonatorsCount: 0,
             createdAt: block.timestamp,
             status: percentages.length == 0
                 ? PoolStatus.ACTIVE
                 : PoolStatus.PENDING
+        });
+        _poolSummaries[poolId] = PoolSummary({
+            totalDonationsAmount: 0,
+            totalDonationsCount: 0,
+            uniqueDonatorsCount: 0
         });
 
         // Add creator as first member
@@ -92,6 +98,7 @@ contract Distributor is IDistributor {
             })
         );
         _isMember[poolId][msg.sender] = true;
+        _userPools[msg.sender].push(poolId);
 
         // Add invitation slots (all with address(0) initially)
         for (uint256 i = 0; i < percentages.length; i++) {
@@ -140,6 +147,7 @@ contract Distributor is IDistributor {
         // Assign member to the slot
         members[slotIndex].member = msg.sender;
         _isMember[poolId][msg.sender] = true;
+        _userPools[msg.sender].push(poolId);
 
         // Check if all members have joined and update pool status
         if (_allMembersJoined(poolId)) {
@@ -170,10 +178,11 @@ contract Distributor is IDistributor {
         }
 
         // Update pool balance for tracking
-        pool.totalDonationsAmount += amount;
-        pool.totalDonationsCount++;
+        PoolSummary storage poolSummary = _poolSummaries[poolId];
+        poolSummary.totalDonationsAmount += amount;
+        poolSummary.totalDonationsCount++;
         if (!_isDonator[poolId][msg.sender]) {
-            pool.uniqueDonatorsCount++;
+            poolSummary.uniqueDonatorsCount++;
             _isDonator[poolId][msg.sender] = true;
         }
 
@@ -222,6 +231,12 @@ contract Distributor is IDistributor {
     }
 
     /// @inheritdoc IDistributor
+    function getPoolSummary(uint256 poolId) external view returns (PoolSummary memory summary) {
+        return _poolSummaries[poolId];
+    }
+
+
+    /// @inheritdoc IDistributor
     function getPoolMembersCount(
         uint256 poolId
     ) external view returns (uint256 total) {
@@ -256,10 +271,17 @@ contract Distributor is IDistributor {
     }
 
     /// @inheritdoc IDistributor
-    function getDonationsCount(
-        uint256 poolId
-    ) external view returns (uint256 total) {
-        return _pools[poolId].totalDonationsCount;
+    function getUserSummary(address user) external view returns (UserSummary memory summary) {
+        for (uint256 i = 0; i < _userPools[user].length; i++) {
+            summary.totalDonationsAmount += _poolSummaries[_userPools[user][i]].totalDonationsAmount;
+            summary.totalDonationsCount += _poolSummaries[_userPools[user][i]].totalDonationsCount;
+        }
+
+        return UserSummary({
+            totalDonationsAmount: summary.totalDonationsAmount,
+            totalDonationsCount: summary.totalDonationsCount,
+            poolCount: _userPools[user].length
+        });
     }
 
     /// @inheritdoc IDistributor

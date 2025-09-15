@@ -20,9 +20,6 @@ interface IDistributorStructs {
         string title;
         string description;
         string imageUri;
-        uint256 totalDonationsAmount;
-        uint256 totalDonationsCount;
-        uint256 uniqueDonatorsCount;
         uint256 createdAt;
         PoolStatus status;
     }
@@ -31,5 +28,17 @@ interface IDistributorStructs {
         address member;
         bytes32 invitationCodeHash;
         uint256 percentage; // Basis points (1% = 100, 100% = 10000)
+    }
+
+    struct PoolSummary {
+        uint256 totalDonationsAmount;
+        uint256 totalDonationsCount;
+        uint256 uniqueDonatorsCount;
+    }
+
+    struct UserSummary {
+        uint256 totalDonationsAmount;
+        uint256 totalDonationsCount;
+        uint256 poolCount;
     }
 }

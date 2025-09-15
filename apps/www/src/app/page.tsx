@@ -20,13 +20,7 @@ export default function Home() {
   const { currentUser } = useCurrentUser();
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-16"
-      style={{
-        background:
-          "linear-gradient(135deg, #fed7aa 0%, #ffffff 30%, #ffffff 70%, #fed7aa 100%)",
-      }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
       {/* Fork button */}
       <div className="absolute bottom-6 right-6">
         <Button size="sm" className="rounded-full " asChild>
@@ -81,14 +75,7 @@ export default function Home() {
             </h1>
             <TypeAnimation
               preRenderFirstString={true}
-              sequence={[
-                "art",
-                1000,
-                "projects",
-                1000,
-                "causes",
-                1000,
-              ]}
+              sequence={["art", 1000, "projects", 1000, "causes", 1000]}
               wrapper="h1"
               speed={50}
               style={{
@@ -114,9 +101,12 @@ export default function Home() {
             <div className="w-12 h-12 flex items-center justify-center bg-orange-500/20 rounded-md">
               <BoltIcon className="w-8 h-8 text-orange-500" />
             </div>
-            <p className="text-foreground text-sm font-bold">Smart Distribution</p>
+            <p className="text-foreground text-sm font-bold">
+              Smart Distribution
+            </p>
             <p className="text-muted-foreground text-xs max-w-[200px] text-center">
-              Automatically distribute funds to beneficiaries based on preset rules.
+              Automatically distribute funds to beneficiaries based on preset
+              rules.
             </p>
           </div>
 
@@ -124,9 +114,12 @@ export default function Home() {
             <div className="w-12 h-12 flex items-center justify-center bg-green-500/20 rounded-md">
               <CurrencyDollarIcon className="w-8 h-8 text-green-500" />
             </div>
-            <p className="text-foreground text-sm font-bold">Universal Donations</p>
+            <p className="text-foreground text-sm font-bold">
+              Universal Donations
+            </p>
             <p className="text-muted-foreground text-xs max-w-[200px] text-center">
-              Accept donations in any token or fiat, automatically settled in USDC.
+              Accept donations in any token or fiat, automatically settled in
+              USDC.
             </p>
           </div>
 

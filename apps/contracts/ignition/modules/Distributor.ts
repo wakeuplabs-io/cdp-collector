@@ -4,9 +4,12 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const DistributorModule = buildModule("DistributorModule", (m) => {
-  const lock = m.contract("Distributor", [], {});
+  // Replace with USDC contract when deploying to mainnet
+  const usdc = m.contract("USDC", [], {});
+  
+  const distributor = m.contract("Distributor", [usdc], {});
 
-  return { lock };
+  return { usdc, distributor };
 });
 
 export default DistributorModule;

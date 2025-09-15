@@ -9,6 +9,10 @@ importers:
   .: {}
 
   apps/contracts:
+    dependencies:
+      dotenv:
+        specifier: ^17.2.2
+        version: 17.2.2
     devDependencies:
       '@nomicfoundation/hardhat-ignition':
         specifier: ^0.15.0
@@ -29,7 +33,7 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1(hardhat@2.26.3(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@20.19.13)(typescript@5.0.4))(typescript@5.0.4)(utf-8-validate@5.0.10))(typescript@5.0.4)(viem@2.37.5(bufferutil@4.0.9)(typescript@5.0.4)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@openzeppelin/contracts':
-        specifier: ^5.4.0
+        specifier: 5.4.0
         version: 5.4.0
       '@types/chai':
         specifier: ^4.2.0
@@ -85,6 +89,9 @@ importers:
       '@hookform/resolvers':
         specifier: 5.2.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.1.0))
+      '@metamask/jazzicon':
+        specifier: 2.0.0
+        version: 2.0.0
       '@radix-ui/react-checkbox':
         specifier: ^1.3.3
         version: 1.3.3(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -112,6 +119,9 @@ importers:
       next:
         specifier: 15.5.2
         version: 15.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      pinata:
+        specifier: 2.5.0
+        version: 2.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -546,6 +556,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@metamask/jazzicon@2.0.0':
+    resolution: {integrity: sha512-7M+WSZWKcQAo0LEhErKf1z+D3YX0tEDAcGvcKbDyvDg34uvgeKR00mFNIYwAhdAS9t8YXxhxZgsrRBBg6X8UQg==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -2035,6 +2048,10 @@ packages:
   cliui@7.0.4:
     resolution: {integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==}
 
+  clone@1.0.4:
+    resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
+    engines: {node: '>=0.8'}
+
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
@@ -2052,8 +2069,14 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  color-string@0.3.0:
+    resolution: {integrity: sha512-sz29j1bmSDfoAxKIEU6zwoIZXN6BrFbAMIhfYCNyiZXBDuU/aiHlN84lp/xDzL2ubyFhLDobHIlU1X70XRrMDA==}
+
   color-string@1.9.1:
     resolution: {integrity: sha512-shrVawQFojnZv6xM40anx4CkoDP+fZsw/ZerEMsW/pyzsRbElpsL/DBVW7q3ExxwusdNXI3lXpuhEZkzs8p5Eg==}
+
+  color@0.11.4:
+    resolution: {integrity: sha512-Ajpjd8asqZ6EdxQeqGzU5WBhhTfJ/0cA4Wlbre7e5vXfmDSmda7Ov6jeKoru+b0vHcb1CqvuroTHp5zIWzhVMA==}
 
   color@4.2.3:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
@@ -2205,6 +2228,10 @@ packages:
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
+
+  dotenv@17.2.2:
+    resolution: {integrity: sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q==}
+    engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -3186,6 +3213,9 @@ packages:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
 
+  mersenne-twister@1.1.0:
+    resolution: {integrity: sha512-mUYWsMKNrm4lfygPkL3OfGzOPTR2DBlTkBNHM//F6hGp8cLThY897crAlk3/Jo17LEOOjQUrNAx6DvgO77QJkA==}
+
   micro-eth-signer@0.14.0:
     resolution: {integrity: sha512-5PLLzHiVYPWClEvZIXXFu5yutzpadb73rnQCpUqIHu3No3coFuWQNfE5tkBQJ7djuLYl6aRLaS0MgWJYGoqiBw==}
 
@@ -3468,6 +3498,18 @@ packages:
   pify@4.0.1:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
     engines: {node: '>=6'}
+
+  pinata@2.5.0:
+    resolution: {integrity: sha512-zjjrEUbEqeAE3gqIOy1K8f4xq3CDDefCgRj6tMqn14gbclSYo014+HQcfcKAAstMUjYNDb1yYQjxmBImW2kxCw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
@@ -4781,6 +4823,11 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@metamask/jazzicon@2.0.0':
+    dependencies:
+      color: 0.11.4
+      mersenne-twister: 1.1.0
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
@@ -6359,6 +6406,8 @@ snapshots:
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
 
+  clone@1.0.4: {}
+
   clsx@2.1.1: {}
 
   color-convert@1.9.3:
@@ -6373,11 +6422,21 @@ snapshots:
 
   color-name@1.1.4: {}
 
+  color-string@0.3.0:
+    dependencies:
+      color-name: 1.1.4
+
   color-string@1.9.1:
     dependencies:
       color-name: 1.1.4
       simple-swizzle: 0.2.2
     optional: true
+
+  color@0.11.4:
+    dependencies:
+      clone: 1.0.4
+      color-convert: 1.9.3
+      color-string: 0.3.0
 
   color@4.2.3:
     dependencies:
@@ -6518,6 +6577,8 @@ snapshots:
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
+
+  dotenv@17.2.2: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -7749,6 +7810,8 @@ snapshots:
 
   merge2@1.4.1: {}
 
+  mersenne-twister@1.1.0: {}
+
   micro-eth-signer@0.14.0:
     dependencies:
       '@noble/curves': 1.8.2
@@ -8067,6 +8130,11 @@ snapshots:
   picomatch@4.0.3: {}
 
   pify@4.0.1: {}
+
+  pinata@2.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    optionalDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   possible-typed-array-names@1.1.0: {}
 

@@ -13,8 +13,8 @@ describe("Distributor", function () {
 
     // Deploy MockERC20 (USDC)
     const mockUSDC = await hre.viem.deployContract(
-      "src/mocks/MockERC20.sol:MockERC20",
-      ["USD Coin", "USDC", 6]
+      "src/mocks/USDC.sol:USDC",
+      []
     );
 
     // Deploy Distributor
@@ -50,8 +50,8 @@ describe("Distributor", function () {
 
     // Deploy MockERC20 (USDC)
     const mockUSDC = await hre.viem.deployContract(
-      "src/mocks/MockERC20.sol:MockERC20",
-      ["USD Coin", "USDC", 6]
+      "src/mocks/USDC.sol:USDC",
+      []
     );
 
     // Deploy Distributor
@@ -132,8 +132,8 @@ describe("Distributor", function () {
 
     // Deploy MockERC20 (USDC)
     const mockUSDC = await hre.viem.deployContract(
-      "src/mocks/MockERC20.sol:MockERC20",
-      ["USD Coin", "USDC", 6]
+      "src/mocks/USDC.sol:USDC",
+      []
     );
 
     // Deploy Distributor
@@ -248,9 +248,6 @@ describe("Distributor", function () {
       expect(pool.title).to.equal("Test Pool");
       expect(pool.description).to.equal("A test pool for fundraising");
       expect(pool.imageUri).to.equal("https://example.com/image.png");
-      expect(pool.totalDonationsAmount).to.equal(0n);
-      expect(pool.totalDonationsCount).to.equal(0n);
-      expect(pool.uniqueDonatorsCount).to.equal(0n);
       expect(pool.status).to.equal(1); // PoolStatus.ACTIVE because no invitation codes are provided
     });
 
@@ -277,9 +274,6 @@ describe("Distributor", function () {
       expect(pool.title).to.equal("Test Pool");
       expect(pool.description).to.equal("A test pool for fundraising");
       expect(pool.imageUri).to.equal("https://example.com/image.png");
-      expect(pool.totalDonationsAmount).to.equal(0n);
-      expect(pool.totalDonationsCount).to.equal(0n);
-      expect(pool.uniqueDonatorsCount).to.equal(0n);
       expect(pool.status).to.equal(0); // PoolStatus.PENDING because invitation codes are provided
     });
 
@@ -1104,6 +1098,604 @@ describe("Distributor", function () {
           account: addr2.account,
         })
       ).to.be.rejectedWith("PoolInactive");
+    });
+  });
+
+  describe("View Methods", function () {
+    describe("getPool", function () {
+      it("Should return correct pool data for existing pool", async function () {
+        const { distributor, creator, singleMemberPoolId } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const pool = await distributor.read.getPool([singleMemberPoolId]);
+        
+        expect(pool.id).to.equal(singleMemberPoolId);
+        expect(pool.creator).to.equal(getAddress(creator.account.address));
+        expect(pool.title).to.equal("Test Pool");
+        expect(pool.description).to.equal("A test pool for fundraising");
+        expect(pool.imageUri).to.equal("https://example.com/image.png");
+        expect(pool.status).to.equal(1); // PoolStatus.ACTIVE
+        expect(Number(pool.createdAt)).to.be.greaterThan(0);
+      });
+
+      it("Should return empty pool data for non-existent pool", async function () {
+        const { distributor } = await loadFixture(deployDistributorFixture);
+
+        const pool = await distributor.read.getPool([999n]);
+        
+        expect(pool.id).to.equal(0n);
+        expect(pool.creator).to.equal("0x0000000000000000000000000000000000000000");
+        expect(pool.title).to.equal("");
+        expect(pool.description).to.equal("");
+        expect(pool.imageUri).to.equal("");
+        expect(pool.status).to.equal(0);
+        expect(pool.createdAt).to.equal(0n);
+      });
+
+      it("Should return correct status for pending pool", async function () {
+        const { distributor, creator } = await loadFixture(deployDistributorFixture);
+
+        const invitationCodeHash = keccak256(toBytes("secret123"));
+        await distributor.write.createPool([
+          "Pending Pool",
+          "Pool description",
+          "https://example.com/image.png",
+          [invitationCodeHash],
+          [5000n],
+        ], { account: creator.account });
+
+        const pool = await distributor.read.getPool([1n]);
+        expect(pool.status).to.equal(0); // PoolStatus.PENDING
+      });
+
+      it("Should return correct status for deactivated pool", async function () {
+        const { distributor, creator, deactivatedPoolId } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const pool = await distributor.read.getPool([deactivatedPoolId]);
+        expect(pool.status).to.equal(2); // PoolStatus.INACTIVE
+      });
+    });
+
+    describe("getPoolSummary", function () {
+      it("Should return empty summary for new pool", async function () {
+        const { distributor, singleMemberPoolId } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const summary = await distributor.read.getPoolSummary([singleMemberPoolId]);
+        
+        expect(summary.totalDonationsAmount).to.equal(0n);
+        expect(summary.totalDonationsCount).to.equal(0n);
+        expect(summary.uniqueDonatorsCount).to.equal(0n);
+      });
+
+      it("Should track donations correctly", async function () {
+        const { distributor, mockUSDC, creator, addr2, addr3, singleMemberPoolId } =
+          await loadFixture(deployDistributorFixtureWithPool);
+
+        const donationAmount1 = parseUnits("100", 6);
+        const donationAmount2 = parseUnits("200", 6);
+
+        // First donation from addr2
+        await mockUSDC.write.approve([distributor.address, donationAmount1], {
+          account: addr2.account,
+        });
+        await distributor.write.donate([singleMemberPoolId, donationAmount1], {
+          account: addr2.account,
+        });
+
+        // Second donation from addr3
+        await mockUSDC.write.approve([distributor.address, donationAmount2], {
+          account: addr3.account,
+        });
+        await distributor.write.donate([singleMemberPoolId, donationAmount2], {
+          account: addr3.account,
+        });
+
+        // Third donation from addr2 (same donor)
+        await mockUSDC.write.approve([distributor.address, donationAmount1], {
+          account: addr2.account,
+        });
+        await distributor.write.donate([singleMemberPoolId, donationAmount1], {
+          account: addr2.account,
+        });
+
+        const summary = await distributor.read.getPoolSummary([singleMemberPoolId]);
+        
+        expect(summary.totalDonationsAmount).to.equal(donationAmount1 + donationAmount2 + donationAmount1);
+        expect(summary.totalDonationsCount).to.equal(3n);
+        expect(summary.uniqueDonatorsCount).to.equal(2n); // addr2 and addr3
+      });
+
+      it("Should return empty summary for non-existent pool", async function () {
+        const { distributor } = await loadFixture(deployDistributorFixture);
+
+        const summary = await distributor.read.getPoolSummary([999n]);
+        
+        expect(summary.totalDonationsAmount).to.equal(0n);
+        expect(summary.totalDonationsCount).to.equal(0n);
+        expect(summary.uniqueDonatorsCount).to.equal(0n);
+      });
+    });
+
+    describe("getPoolMembersCount", function () {
+      it("Should return 1 for single member pool", async function () {
+        const { distributor, singleMemberPoolId } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const count = await distributor.read.getPoolMembersCount([singleMemberPoolId]);
+        expect(count).to.equal(1n);
+      });
+
+      it("Should return correct count for multi-member pool", async function () {
+        const { distributor, multiMemberPoolId } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const count = await distributor.read.getPoolMembersCount([multiMemberPoolId]);
+        expect(count).to.equal(2n); // Creator + 1 joined member
+      });
+
+      it("Should return correct count for pool with invitation slots", async function () {
+        const { distributor, creator } = await loadFixture(deployDistributorFixture);
+
+        const invitationCodeHash1 = keccak256(toBytes("secret1"));
+        const invitationCodeHash2 = keccak256(toBytes("secret2"));
+        
+        await distributor.write.createPool([
+          "Multi-slot Pool",
+          "Pool with multiple invitation slots",
+          "https://example.com/image.png",
+          [invitationCodeHash1, invitationCodeHash2],
+          [3000n, 2000n],
+        ], { account: creator.account });
+
+        const count = await distributor.read.getPoolMembersCount([1n]);
+        expect(count).to.equal(3n); // Creator + 2 invitation slots
+      });
+
+      it("Should return 0 for non-existent pool", async function () {
+        const { distributor } = await loadFixture(deployDistributorFixture);
+
+        const count = await distributor.read.getPoolMembersCount([999n]);
+        expect(count).to.equal(0n);
+      });
+    });
+
+    describe("getPoolMembers", function () {
+      it("Should return all members with default pagination", async function () {
+        const { distributor, creator, singleMemberPoolId } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const members = await distributor.read.getPoolMembers([singleMemberPoolId, 0n, 100n]);
+        
+        expect(members).to.have.lengthOf(1);
+        expect(members[0].member).to.equal(getAddress(creator.account.address));
+        expect(members[0].percentage).to.equal(10000n); // 100%
+        expect(members[0].invitationCodeHash).to.equal(BYTES_32_ZERO);
+      });
+
+      it("Should handle pagination correctly", async function () {
+        const { distributor, creator } = await loadFixture(deployDistributorFixture);
+
+        const invitationCodeHash1 = keccak256(toBytes("secret1"));
+        const invitationCodeHash2 = keccak256(toBytes("secret2"));
+        const invitationCodeHash3 = keccak256(toBytes("secret3"));
+        
+        await distributor.write.createPool([
+          "Large Pool",
+          "Pool with multiple members",
+          "https://example.com/image.png",
+          [invitationCodeHash1, invitationCodeHash2, invitationCodeHash3],
+          [2000n, 2000n, 2000n],
+        ], { account: creator.account });
+
+        // Test first page (offset=0, limit=2)
+        const firstPage = await distributor.read.getPoolMembers([1n, 0n, 2n]);
+        expect(firstPage).to.have.lengthOf(2);
+        expect(firstPage[0].member).to.equal(getAddress(creator.account.address));
+        expect(firstPage[1].member).to.equal("0x0000000000000000000000000000000000000000");
+
+        // Test second page (offset=2, limit=2)
+        const secondPage = await distributor.read.getPoolMembers([1n, 2n, 2n]);
+        expect(secondPage).to.have.lengthOf(2);
+        expect(secondPage[0].member).to.equal("0x0000000000000000000000000000000000000000");
+        expect(secondPage[1].member).to.equal("0x0000000000000000000000000000000000000000");
+
+        // Test beyond bounds
+        const beyondBounds = await distributor.read.getPoolMembers([1n, 10n, 5n]);
+        expect(beyondBounds).to.have.lengthOf(0);
+      });
+
+      it("Should show invitation code hashes for empty slots", async function () {
+        const { distributor, creator } = await loadFixture(deployDistributorFixture);
+
+        const invitationCodeHash = keccak256(toBytes("secret123"));
+        
+        await distributor.write.createPool([
+          "Invitation Pool",
+          "Pool with invitation slot",
+          "https://example.com/image.png",
+          [invitationCodeHash],
+          [4000n],
+        ], { account: creator.account });
+
+        const members = await distributor.read.getPoolMembers([1n, 0n, 100n]);
+        
+        expect(members).to.have.lengthOf(2);
+        // Creator
+        expect(members[0].member).to.equal(getAddress(creator.account.address));
+        expect(members[0].percentage).to.equal(6000n);
+        expect(members[0].invitationCodeHash).to.equal(BYTES_32_ZERO);
+        // Invitation slot
+        expect(members[1].member).to.equal("0x0000000000000000000000000000000000000000");
+        expect(members[1].percentage).to.equal(4000n);
+        expect(members[1].invitationCodeHash).to.equal(invitationCodeHash);
+      });
+
+      it("Should revert for non-existent pool", async function () {
+        const { distributor } = await loadFixture(deployDistributorFixture);
+
+        await expect(
+          distributor.read.getPoolMembers([999n, 0n, 100n])
+        ).to.be.rejectedWith("PoolNotFound");
+      });
+
+      it("Should adjust limit when exceeding available members", async function () {
+        const { distributor, singleMemberPoolId } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        // Request more members than exist
+        const members = await distributor.read.getPoolMembers([singleMemberPoolId, 0n, 10n]);
+        expect(members).to.have.lengthOf(1); // Only 1 member exists
+      });
+    });
+
+    describe("getBalanceOf", function () {
+      it("Should return 0 for member with no donations received", async function () {
+        const { distributor, creator } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const balance = await distributor.read.getBalanceOf([creator.account.address]);
+        expect(balance).to.equal(0n);
+      });
+
+      it("Should return correct balance after donations", async function () {
+        const { distributor, creator, singleMemberPoolId, donationAmount } =
+          await loadFixture(deployDistributorFixtureWithDonations);
+
+        const balance = await distributor.read.getBalanceOf([creator.account.address]);
+        // Creator gets 100% from single member pool (1000) + 50% from multi member pool (500) = 1500
+        expect(balance).to.equal(donationAmount + donationAmount / 2n);
+      });
+
+      it("Should return updated balance after withdrawal", async function () {
+        const { distributor, creator, donationAmount } = await loadFixture(
+          deployDistributorFixtureWithDonations
+        );
+
+        const withdrawAmount = parseUnits("500", 6);
+        await distributor.write.withdraw([withdrawAmount, creator.account.address], {
+          account: creator.account,
+        });
+
+        const balance = await distributor.read.getBalanceOf([creator.account.address]);
+        // Initial balance: 1000 + 500 = 1500, after withdrawing 500 = 1000
+        const expectedBalance = donationAmount + donationAmount / 2n - withdrawAmount;
+        expect(balance).to.equal(expectedBalance);
+      });
+
+      it("Should track split donations correctly in multi-member pool", async function () {
+        const { distributor, mockUSDC, creator, addr2 } = await loadFixture(
+          deployDistributorFixture
+        );
+
+        const invitationCode = "secret123";
+        const invitationCodeHash = keccak256(toBytes(invitationCode));
+        
+        // Create pool: creator 70%, invitation slot 30%
+        await distributor.write.createPool([
+          "Split Pool",
+          "Pool for testing splits",
+          "https://example.com/image.png",
+          [invitationCodeHash],
+          [3000n],
+        ], { account: creator.account });
+
+        // addr2 joins
+        await distributor.write.joinPool([1n, invitationCode], {
+          account: addr2.account,
+        });
+
+        // Donate 1000 USDC
+        const donationAmount = parseUnits("1000", 6);
+        await mockUSDC.write.approve([distributor.address, donationAmount], {
+          account: creator.account,
+        });
+        await distributor.write.donate([1n, donationAmount], {
+          account: creator.account,
+        });
+
+        // Check balances
+        const creatorBalance = await distributor.read.getBalanceOf([creator.account.address]);
+        const addr2Balance = await distributor.read.getBalanceOf([addr2.account.address]);
+        
+        expect(creatorBalance).to.equal(parseUnits("700", 6)); // 70%
+        expect(addr2Balance).to.equal(parseUnits("300", 6)); // 30%
+      });
+
+      it("Should return 0 for non-member address", async function () {
+        const { distributor, addr3 } = await loadFixture(
+          deployDistributorFixtureWithDonations
+        );
+
+        const balance = await distributor.read.getBalanceOf([addr3.account.address]);
+        expect(balance).to.equal(0n);
+      });
+    });
+
+    describe("getUserSummary", function () {
+      it("Should return empty summary for user with no pools", async function () {
+        const { distributor, addr3 } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const summary = await distributor.read.getUserSummary([addr3.account.address]);
+        
+        expect(summary.totalDonationsAmount).to.equal(0n);
+        expect(summary.totalDonationsCount).to.equal(0n);
+        expect(summary.poolCount).to.equal(0n);
+      });
+
+      it("Should aggregate data from multiple pools", async function () {
+        const { distributor, mockUSDC, creator } = await loadFixture(
+          deployDistributorFixture
+        );
+
+        // Create first pool
+        await distributor.write.createPool([
+          "Pool 1",
+          "First pool",
+          "https://example.com/image1.png",
+          [],
+          [],
+        ], { account: creator.account });
+
+        // Create second pool
+        await distributor.write.createPool([
+          "Pool 2",
+          "Second pool",
+          "https://example.com/image2.png",
+          [],
+          [],
+        ], { account: creator.account });
+
+        // Donate to first pool
+        const donation1 = parseUnits("500", 6);
+        await mockUSDC.write.approve([distributor.address, donation1], {
+          account: creator.account,
+        });
+        await distributor.write.donate([1n, donation1], {
+          account: creator.account,
+        });
+
+        // Donate to second pool twice
+        const donation2 = parseUnits("300", 6);
+        const donation3 = parseUnits("200", 6);
+        await mockUSDC.write.approve([distributor.address, donation2 + donation3], {
+          account: creator.account,
+        });
+        await distributor.write.donate([2n, donation2], {
+          account: creator.account,
+        });
+        await distributor.write.donate([2n, donation3], {
+          account: creator.account,
+        });
+
+        const summary = await distributor.read.getUserSummary([creator.account.address]);
+        
+        expect(summary.totalDonationsAmount).to.equal(donation1 + donation2 + donation3);
+        expect(summary.totalDonationsCount).to.equal(3n);
+        expect(summary.poolCount).to.equal(2n);
+      });
+
+      it("Should include pools where user joined via invitation", async function () {
+        const { distributor, mockUSDC, creator, addr2 } = await loadFixture(
+          deployDistributorFixture
+        );
+
+        const invitationCode = "secret123";
+        const invitationCodeHash = keccak256(toBytes(invitationCode));
+        
+        // Creator creates pool
+        await distributor.write.createPool([
+          "Invitation Pool",
+          "Pool with invitation",
+          "https://example.com/image.png",
+          [invitationCodeHash],
+          [5000n],
+        ], { account: creator.account });
+
+        // addr2 joins
+        await distributor.write.joinPool([1n, invitationCode], {
+          account: addr2.account,
+        });
+
+        // Someone donates
+        const donationAmount = parseUnits("1000", 6);
+        await mockUSDC.write.approve([distributor.address, donationAmount], {
+          account: creator.account,
+        });
+        await distributor.write.donate([1n, donationAmount], {
+          account: creator.account,
+        });
+
+        // Check addr2's summary (joined member)
+        const addr2Summary = await distributor.read.getUserSummary([addr2.account.address]);
+        expect(addr2Summary.totalDonationsAmount).to.equal(donationAmount);
+        expect(addr2Summary.totalDonationsCount).to.equal(1n);
+        expect(addr2Summary.poolCount).to.equal(1n);
+
+        // Check creator's summary
+        const creatorSummary = await distributor.read.getUserSummary([creator.account.address]);
+        expect(creatorSummary.totalDonationsAmount).to.equal(donationAmount);
+        expect(creatorSummary.totalDonationsCount).to.equal(1n);
+        expect(creatorSummary.poolCount).to.equal(1n);
+      });
+    });
+
+    describe("getUserPoolsCount", function () {
+      it("Should return 0 for user with no pools", async function () {
+        const { distributor, addr3 } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const count = await distributor.read.getUserPoolsCount([addr3.account.address]);
+        expect(count).to.equal(0n);
+      });
+
+      it("Should return correct count for pool creator", async function () {
+        const { distributor, creator } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const count = await distributor.read.getUserPoolsCount([creator.account.address]);
+        expect(count).to.equal(3n); // Created 3 pools in fixture
+      });
+
+      it("Should return correct count for joined member", async function () {
+        const { distributor, addr2 } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const count = await distributor.read.getUserPoolsCount([addr2.account.address]);
+        expect(count).to.equal(1n); // Joined 1 pool in fixture
+      });
+
+      it("Should increase count when user creates new pools", async function () {
+        const { distributor, creator } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const initialCount = await distributor.read.getUserPoolsCount([creator.account.address]);
+        
+        // Create another pool
+        await distributor.write.createPool([
+          "New Pool",
+          "Another pool",
+          "https://example.com/image.png",
+          [],
+          [],
+        ], { account: creator.account });
+
+        const newCount = await distributor.read.getUserPoolsCount([creator.account.address]);
+        expect(newCount).to.equal(initialCount + 1n);
+      });
+    });
+
+    describe("getUserPools", function () {
+      it("Should return empty array for user with no pools", async function () {
+        const { distributor, addr3 } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const pools = await distributor.read.getUserPools([addr3.account.address, 0n, 100n]);
+        expect(pools).to.have.lengthOf(0);
+      });
+
+      it("Should return all pools for creator", async function () {
+        const { distributor, creator } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const pools = await distributor.read.getUserPools([creator.account.address, 0n, 100n]);
+        expect(pools).to.have.lengthOf(3);
+        
+        // Verify pool data
+        expect(pools[0].id).to.equal(1n);
+        expect(pools[0].creator).to.equal(getAddress(creator.account.address));
+        expect(pools[0].title).to.equal("Test Pool");
+        
+        expect(pools[1].id).to.equal(2n);
+        expect(pools[2].id).to.equal(3n);
+      });
+
+      it("Should handle pagination correctly", async function () {
+        const { distributor, creator } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        // Test first page (limit 2)
+        const firstPage = await distributor.read.getUserPools([creator.account.address, 0n, 2n]);
+        expect(firstPage).to.have.lengthOf(2);
+        expect(firstPage[0].id).to.equal(1n);
+        expect(firstPage[1].id).to.equal(2n);
+
+        // Test second page (offset 2, limit 2)
+        const secondPage = await distributor.read.getUserPools([creator.account.address, 2n, 2n]);
+        expect(secondPage).to.have.lengthOf(1);
+        expect(secondPage[0].id).to.equal(3n);
+
+        // Test beyond bounds
+        const beyondBounds = await distributor.read.getUserPools([creator.account.address, 10n, 5n]);
+        expect(beyondBounds).to.have.lengthOf(0);
+      });
+
+      it("Should return pools for joined member", async function () {
+        const { distributor, addr2 } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        const pools = await distributor.read.getUserPools([addr2.account.address, 0n, 100n]);
+        expect(pools).to.have.lengthOf(1);
+        expect(pools[0].id).to.equal(2n); // The multiMemberPoolId
+        expect(pools[0].title).to.equal("Test Pool");
+      });
+
+      it("Should adjust limit when exceeding available pools", async function () {
+        const { distributor, creator } = await loadFixture(
+          deployDistributorFixtureWithPool
+        );
+
+        // Request more pools than exist
+        const pools = await distributor.read.getUserPools([creator.account.address, 0n, 10n]);
+        expect(pools).to.have.lengthOf(3); // Only 3 pools exist
+      });
+
+      it("Should return pools in creation order", async function () {
+        const { distributor, creator } = await loadFixture(
+          deployDistributorFixture
+        );
+
+        // Create pools in specific order
+        await distributor.write.createPool([
+          "First Pool",
+          "Description 1",
+          "https://example.com/image1.png",
+          [],
+          [],
+        ], { account: creator.account });
+
+        await distributor.write.createPool([
+          "Second Pool",
+          "Description 2",
+          "https://example.com/image2.png",
+          [],
+          [],
+        ], { account: creator.account });
+
+        const pools = await distributor.read.getUserPools([creator.account.address, 0n, 100n]);
+        expect(pools).to.have.lengthOf(2);
+        expect(pools[0].title).to.equal("First Pool");
+        expect(pools[1].title).to.equal("Second Pool");
+      });
     });
   });
 });

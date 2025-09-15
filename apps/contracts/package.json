@@ -6,7 +6,8 @@
   "scripts": {
     "test": "hardhat test",
     "compile": "hardhat compile",
-    "deploy": "hardhat ignition deploy ./ignition/modules/Distributor.ts"
+    "deploy:base-sepolia": "hardhat ignition deploy ignition/modules/Distributor.ts --network base-sepolia --verify",
+    "wipe:base-sepolia": "hardhat ignition wipe chain-84532 DistributorModule#Distributor"
   },
   "keywords": [],
   "author": "",
@@ -31,5 +32,8 @@
     "ts-node": ">=8.0.0",
     "typescript": "~5.0.4",
     "viem": "^2.7.6"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2"
   }
 }

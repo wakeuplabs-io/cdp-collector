@@ -1,9 +1,11 @@
 "use client";
 
 import { AccountManager } from "@/components/account-manager";
+import { FundraiserCard } from "@/components/fundraisers/card";
 import { CreateFundraiser } from "@/components/fundraisers/create";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import { useUserPools, useUserSummary } from "@/hooks/distributor";
 import { useCurrentUser, useIsInitialized } from "@coinbase/cdp-hooks";
 import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { PiggyBankIcon, PlusIcon } from "lucide-react";
@@ -16,11 +18,22 @@ export default function Dashboard() {
   const { currentUser } = useCurrentUser();
   const { isInitialized } = useIsInitialized();
 
+  const { userPools } = useUserPools();
+  const { userSummary } = useUserSummary();
+
   useEffect(() => {
     if (!currentUser && isInitialized) {
       router.push("/auth");
     }
   }, [currentUser, isInitialized]);
+
+  const poolCount = userSummary?.poolCount ?? 0n;
+  const totalDonationsAmount = userSummary?.totalDonationsAmount ?? 0n;
+  const totalDonationsCount = userSummary?.totalDonationsCount ?? 0n;
+  const averageDonation =
+    totalDonationsCount === 0n
+      ? 0n
+      : totalDonationsAmount / totalDonationsCount;
 
   return (
     <div>
@@ -45,7 +58,7 @@ export default function Dashboard() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold">10 USDC</p>
+            <p className="text-2xl font-bold">{totalDonationsAmount} USDC</p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donations
             </h2>
@@ -55,7 +68,7 @@ export default function Dashboard() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
-            <p className="text-2xl font-bold">10 USDC</p>
+            <p className="text-2xl font-bold">{averageDonation} USDC</p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation
             </h2>
@@ -65,9 +78,9 @@ export default function Dashboard() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <ChartBarIcon className="w-5 h-5 text-orange-500" />
             </div>
-            <p className="text-2xl font-bold">10</p>
+            <p className="text-2xl font-bold">{poolCount}</p>
             <h2 className="text-sm text-muted-foreground font-medium">
-              Total Fundraisers
+              Total Collector Links
             </h2>
           </div>
         </div>
@@ -83,21 +96,24 @@ export default function Dashboard() {
           </CreateFundraiser>
         </div>
 
-        {/* <div className="grid grid-cols-3 gap-4 mt-10">
-          <FundraiserCard id="1" />
-          <FundraiserCard id="2" />
-        </div> */}
-
-        <div className="mt-10 border rounded-xl px-6 py-20 text-center">
-          <div className="bg-muted rounded-xl mb-4 h-10 w-10 flex items-center justify-center mx-auto">
-            <PiggyBankIcon className="w-4 h-4" />
+        {userPools.length > 0 ? (
+          <div className="grid grid-cols-3 gap-4 mt-10">
+            {userPools.map((pool) => (
+              <FundraiserCard key={pool.id} pool={pool} />
+            ))}
           </div>
+        ) : (
+          <div className="mt-10 border rounded-xl px-6 py-20 text-center">
+            <div className="bg-muted rounded-xl mb-4 h-10 w-10 flex items-center justify-center mx-auto">
+              <PiggyBankIcon className="w-4 h-4" />
+            </div>
 
-          <h2 className="text-xl font-bold">No fundraisers yet</h2>
-          <p className="text-muted-foreground text-sm">
-            Your fundraisers will appear here <br /> once you create one.
-          </p>
-        </div>
+            <h2 className="text-xl font-bold">No fundraisers yet</h2>
+            <p className="text-muted-foreground text-sm">
+              Your fundraisers will appear here <br /> once you create one.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

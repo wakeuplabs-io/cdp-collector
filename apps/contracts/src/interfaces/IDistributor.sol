@@ -64,7 +64,6 @@ interface IDistributor is
         address user
     ) external view returns (UserSummary memory summary);
 
-
     /// @notice Gets the number of pools that a user is a member of
     /// @param user The address to check membership for
     /// @return total The number of pools the user is a member of
@@ -96,14 +95,4 @@ interface IDistributor is
     /// @param poolId The pool identifier
     /// @param amount The amount to donate in USDC
     function donate(uint256 poolId, uint256 amount) external;
-
-    /// @notice Gets the available balance for a specific member
-    /// @param user The member address
-    /// @return balance The amount available for withdrawal
-    function getBalanceOf(address user) external view returns (uint256 balance);
-
-    /// @notice Withdraws available funds
-    /// @param amount The amount to withdraw in USDC
-    /// @param recipient The address to receive the funds
-    function withdraw(uint256 amount, address recipient) external;
 }

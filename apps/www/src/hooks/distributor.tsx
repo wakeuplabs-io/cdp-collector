@@ -33,7 +33,9 @@ export const useCreatePool = () => {
         throw new Error("No smart account found");
       }
 
-      const { calls, members } = await distributorService.prepareCreatePool(pool);
+      const { calls, members } = await distributorService.prepareCreatePool(
+        pool
+      );
 
       const result = await sendUserOperation({
         evmSmartAccount: smartAccount,

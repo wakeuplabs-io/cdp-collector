@@ -13,12 +13,9 @@ contract Distributor is IDistributor {
 
     /// @notice Mapping from pool ID to pool data
     mapping(uint256 => Pool) private _pools;
-    
+
     /// @notice Mapping from pool ID to pool summary
     mapping(uint256 => PoolSummary) private _poolSummaries;
-    
-    /// @notice Mapping from pool ID to mapping from address to bool if they are a donator
-    mapping(uint256 => mapping(address => bool)) private _isDonator;
 
     /// @notice Mapping from pool ID to array of members
     mapping(uint256 => Member[]) private _poolMembers;
@@ -29,8 +26,8 @@ contract Distributor is IDistributor {
     /// @notice Mapping to check if an address is a member of a pool. poolId -> address -> bool
     mapping(uint256 => mapping(address => bool)) private _isMember;
 
-    /// @notice Global mapping from member address to their available balance
-    mapping(address => uint256) private _balances;
+    /// @notice Mapping from pool ID to mapping from address to bool if they are a donator
+    mapping(uint256 => mapping(address => bool)) private _isDonator;
 
     constructor(address _usdcAddress) {
         usdc = IERC20(_usdcAddress);
@@ -174,7 +171,8 @@ contract Distributor is IDistributor {
         Member[] storage members = _poolMembers[poolId];
         for (uint256 i = 0; i < members.length; i++) {
             uint256 memberShare = (amount * members[i].percentage) / 10000;
-            _balances[members[i].member] += memberShare;
+            // _balances[members[i].member] += memberShare;
+            usdc.transfer(members[i].member, memberShare);
         }
 
         // Update pool balance for tracking
@@ -187,26 +185,6 @@ contract Distributor is IDistributor {
         }
 
         emit DonationMade(poolId, msg.sender, amount);
-    }
-
-    /// @inheritdoc IDistributor
-    function withdraw(uint256 amount, address recipient) external {
-        if (amount == 0) revert InvalidWithdrawalAmount();
-
-        uint256 balance = _balances[msg.sender];
-        if (amount > balance) {
-            revert InsufficientBalance(amount, balance);
-        }
-
-        // Update member's global balance
-        _balances[msg.sender] -= amount;
-
-        // Transfer USDC to recipient
-        if (!usdc.transfer(recipient, amount)) {
-            revert TransferFailed();
-        }
-
-        emit FundsWithdrawn(msg.sender, recipient, amount);
     }
 
     /// @inheritdoc IDistributor
@@ -231,10 +209,11 @@ contract Distributor is IDistributor {
     }
 
     /// @inheritdoc IDistributor
-    function getPoolSummary(uint256 poolId) external view returns (PoolSummary memory summary) {
+    function getPoolSummary(
+        uint256 poolId
+    ) external view returns (PoolSummary memory summary) {
         return _poolSummaries[poolId];
     }
-
 
     /// @inheritdoc IDistributor
     function getPoolMembersCount(
@@ -264,24 +243,22 @@ contract Distributor is IDistributor {
     }
 
     /// @inheritdoc IDistributor
-    function getBalanceOf(
-        address member
-    ) public view returns (uint256 availableAmount) {
-        return _balances[member];
-    }
-
-    /// @inheritdoc IDistributor
-    function getUserSummary(address user) external view returns (UserSummary memory summary) {
+    function getUserSummary(
+        address user
+    ) external view returns (UserSummary memory summary) {
         for (uint256 i = 0; i < _userPools[user].length; i++) {
-            summary.totalDonationsAmount += _poolSummaries[_userPools[user][i]].totalDonationsAmount;
-            summary.totalDonationsCount += _poolSummaries[_userPools[user][i]].totalDonationsCount;
+            summary.totalDonationsAmount += _poolSummaries[_userPools[user][i]]
+                .totalDonationsAmount;
+            summary.totalDonationsCount += _poolSummaries[_userPools[user][i]]
+                .totalDonationsCount;
         }
 
-        return UserSummary({
-            totalDonationsAmount: summary.totalDonationsAmount,
-            totalDonationsCount: summary.totalDonationsCount,
-            poolCount: _userPools[user].length
-        });
+        return
+            UserSummary({
+                totalDonationsAmount: summary.totalDonationsAmount,
+                totalDonationsCount: summary.totalDonationsCount,
+                poolCount: _userPools[user].length
+            });
     }
 
     /// @inheritdoc IDistributor

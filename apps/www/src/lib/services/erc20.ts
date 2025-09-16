@@ -11,18 +11,15 @@ import {
 export class Erc20Service {
   private readonly publicClient: PublicClient;
 
-  constructor(
-    private readonly erc20Address: Address,
-    private readonly rpcUrl: string
-  ) {
+  constructor(private readonly rpcUrl: string) {
     this.publicClient = createPublicClient({
       transport: http(this.rpcUrl),
     });
   }
 
-  async getBalance(address: `0x${string}`): Promise<bigint> {
+  async getBalance(token: Address, address: `0x${string}`): Promise<bigint> {
     const balance = await this.publicClient.readContract({
-      address: this.erc20Address,
+      address: token,
       abi: erc20Abi,
       functionName: "balanceOf",
       args: [address],
@@ -33,40 +30,55 @@ export class Erc20Service {
 
   async prepareApprove(
     amount: bigint,
+    token: Address,
     to: `0x${string}`
-  ): Promise<TxParameters> {
-    return {
-      to: this.erc20Address,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [to, amount],
-      }),
-      value: 0n,
-    };
+  ): Promise<TxParameters[]> {
+    return [
+      {
+        to: token,
+        data: encodeFunctionData({
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [to, amount],
+        }),
+        value: 0n,
+      },
+    ];
   }
 
-  async prepareTransfer(amount: bigint, to: `0x${string}`): Promise<TxParameters> {
-    return {
-      to: this.erc20Address,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "transfer",
-        args: [to, amount],
-      }),
-      value: 0n,
-    };
+  async prepareTransfer(
+    token: Address,
+    amount: bigint,
+    to: `0x${string}`
+  ): Promise<TxParameters[]> {
+    return [
+      {
+        to: token,
+        data: encodeFunctionData({
+          abi: erc20Abi,
+          functionName: "transfer",
+          args: [to, amount],
+        }),
+        value: 0n,
+      },
+    ];
   }
 
-  async prepareMint(amount: bigint, to: `0x${string}`): Promise<TxParameters> {
-    return {
-      to: this.erc20Address,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "mint",
-        args: [to, amount],
-      }),
-      value: 0n,
-    };
+  async prepareMint(
+    token: Address,
+    amount: bigint,
+    to: `0x${string}`
+  ): Promise<TxParameters[]> {
+    return [
+      {
+        to: token,
+        data: encodeFunctionData({
+          abi: erc20Abi,
+          functionName: "mint",
+          args: [to, amount],
+        }),
+        value: 0n,
+      },
+    ];
   }
 }

@@ -7,3 +7,7 @@ export type Token = {
   iconUrl: string;
   decimals: number;
 };
+
+export type TokenWithBalance = Token & {
+  balance: bigint;
+};

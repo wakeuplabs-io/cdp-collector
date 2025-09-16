@@ -10,18 +10,17 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { TOKEN_DECIMALS } from "@/config";
-import { useBalance, useWithdraw } from "@/hooks/balance";
+import { USDC } from "@/config";
+import { useBalances, useWithdraw } from "@/hooks/balance";
+import { openExplorerTx } from "@/lib/explorer";
 import { formatBalance, shortenAddress } from "@/lib/utils";
+import { TokenWithBalance } from "@/types/token";
 import { useEvmAddress, useSignOut } from "@coinbase/cdp-hooks";
-import {
-  ArrowLeftIcon,
-  ArrowUpIcon,
-  XIcon
-} from "lucide-react";
+import { ArrowLeftIcon, ArrowUpIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tooltip } from "react-tooltip";
+import { toast } from "sonner";
 import { isAddress, parseUnits } from "viem";
 
 enum Tab {
@@ -41,11 +40,16 @@ const Account: React.FC<{
       <Address
         address={address}
         balance={balance}
-        balanceLabel="USDC"
+        balanceLabel={USDC.symbol}
+        decimals={USDC.decimals}
         className="mb-2"
       />
 
-      <Button onClick={() => setTab(Tab.Withdraw)} className="w-full mb-14" size="lg">
+      <Button
+        onClick={() => setTab(Tab.Withdraw)}
+        className="w-full mb-14"
+        size="lg"
+      >
         <ArrowUpIcon className="w-4 h-4" />
         <span>Withdraw</span>
       </Button>
@@ -64,33 +68,36 @@ const Account: React.FC<{
 
 const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
   const { evmAddress } = useEvmAddress();
-  const { data: balance } = useBalance(evmAddress ?? undefined);
-  const { isLoading: isWithdrawing } = useWithdraw();
+  const { balances } = useBalances(evmAddress ?? undefined);
+  const { isLoading: isWithdrawing, withdraw } = useWithdraw();
 
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
+  const [token, setToken] = useState<TokenWithBalance>(balances[0]);
 
   const onWithdraw = useCallback(async () => {
-    if (!evmAddress) return;
-
-    // withdraw({
-    //   amount: parseUnits(amount, TOKEN_DECIMALS),
-    //   to: to as `0x${string}`,
-    // })
-    //   .then(({ userOperationHash }) => {
-    //     toast.success(
-    //       "Withdrawal created successfully with user operation hash: " +
-    //         userOperationHash
-    //     );
-    //     setTab(Tab.Account);
-    //   })
-    //   .catch((error) => {
-    //     console.error(error);
-    //     toast.error("Failed to withdraw", {
-    //       description: error instanceof Error ? error.message : "Unknown error",
-    //     });
-    //   });
-  }, [to, amount, evmAddress, setTab]);
+    withdraw({
+      amount: parseUnits(amount, token.decimals),
+      to: to as `0x${string}`,
+      token: token.address,
+    })
+      .then(({ hash }) => {
+        toast.success("Withdrawal created successfully", {
+          description: `Transaction hash: ${hash}`,
+          action: {
+            label: "Explorer ↗",
+            onClick: () => openExplorerTx(hash),
+          },
+        });
+        setTab(Tab.Account);
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("Failed to withdraw", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      });
+  }, [setTab, token, amount, to]);
 
   const validation = useMemo(() => {
     if (!to) {
@@ -102,27 +109,32 @@ const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
     if (!amount) {
       return { isValid: false, errors: ["Amount is required"] };
     }
-    if (parseUnits(amount, TOKEN_DECIMALS) > (balance ?? BigInt(0))) {
+    if (parseUnits(amount, token.decimals) > (token.balance ?? BigInt(0))) {
       return { isValid: false, errors: ["Amount is greater than balance"] };
     }
-    if (parseUnits(amount, TOKEN_DECIMALS) <= BigInt(0)) {
+    if (parseUnits(amount, token.decimals) <= BigInt(0)) {
       return { isValid: false, errors: ["Amount must be greater than 0"] };
     }
 
     return { isValid: true, errors: [] };
-  }, [to, amount, balance]);
+  }, [to, amount, token]);
 
   if (!evmAddress) return null;
   return (
     <div>
-      <CryptoTokenSelector className="mb-2" />
+      <CryptoTokenSelector
+        className="mb-2"
+        tokens={balances}
+        value={token}
+        onChange={setToken}
+      />
 
       <div className="bg-muted rounded-md px-4 py-3 flex items-center  gap-2 relative pt-6 mb-2">
         <span className="text-xs text-muted-foreground absolute left-4 top-1">
           To
         </span>
         <input
-          className="text-sm text-muted-foreground outline-none w-full"
+          className="text-sm outline-none w-full"
           placeholder="0x..."
           value={to}
           onChange={(e) => setTo(e.target.value)}
@@ -134,7 +146,7 @@ const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
           Amount
         </span>
         <input
-          className="text-sm text-muted-foreground outline-none w-full"
+          className="text-sm outline-none w-full"
           placeholder="0.1"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
@@ -164,13 +176,18 @@ export const AccountManager = () => {
   const [tab, setTab] = useState(Tab.Account);
 
   const { evmAddress } = useEvmAddress();
-  const { data: balance } = useBalance(evmAddress ?? undefined);
+  const { balances } = useBalances(evmAddress ?? undefined);
 
   useEffect(() => {
     if (!evmAddress) {
       setIsOpen(false);
     }
   }, [evmAddress]);
+
+  const usdcBalance = useMemo(
+    () => balances.find((balance) => balance.address === USDC.address),
+    [balances]
+  );
 
   const currentTab = useMemo(() => {
     if (!evmAddress) {
@@ -189,7 +206,7 @@ export const AccountManager = () => {
           <Account
             setTab={setTab}
             address={evmAddress}
-            balance={balance ?? BigInt(0)}
+            balance={usdcBalance?.balance ?? BigInt(0)}
           />
         ),
       },
@@ -201,7 +218,7 @@ export const AccountManager = () => {
     } as const;
 
     return tabs[tab];
-  }, [balance, evmAddress, tab]);
+  }, [usdcBalance, evmAddress, tab]);
 
   return (
     <>
@@ -219,7 +236,8 @@ export const AccountManager = () => {
           />
           <span className="text-sm">{shortenAddress(evmAddress ?? "")}</span>
           <span className="text-sm text-muted-foreground">
-            {formatBalance(balance ?? BigInt(0))} USDC
+            {formatBalance(usdcBalance?.balance ?? BigInt(0), USDC.decimals)}{" "}
+            USDC
           </span>
         </button>
       </div>
@@ -234,9 +252,7 @@ export const AccountManager = () => {
               >
                 <ArrowLeftIcon />
               </button>
-            ) : (
-              <div />
-            )}
+            ) : null}
 
             <DialogClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 rounded-full bg-muted h-4 w-4 flex items-center justify-center">
               <XIcon />

@@ -4,6 +4,7 @@ import { AccountManager } from "@/components/account-manager";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import { useJoinPool, usePool, usePoolMembers } from "@/hooks/distributor";
+import { openExplorerTx } from "@/lib/explorer";
 import { shortenAddress } from "@/lib/utils";
 import { useEvmAddress } from "@coinbase/cdp-hooks";
 import { AuthButton } from "@coinbase/cdp-react";
@@ -129,9 +130,7 @@ export default function Layout({
                 variant="outline"
                 className="w-full h-12"
                 size="lg"
-                onClick={() =>
-                  window.open(`https://basescan.org/tx/${successTx}`, "_blank")
-                }
+                onClick={() => successTx && openExplorerTx(successTx)}
               >
                 Open in explorer
               </Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { openExplorerTx } from "@/lib/explorer";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
@@ -32,9 +33,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         variant="outline"
         className="w-full h-12"
         size="lg"
-        onClick={() =>
-          window.open(`https://basescan.org/tx/${txHash}`, "_blank")
-        }
+        onClick={() => txHash && openExplorerTx(txHash)}
       >
         Open in explorer
       </Button>

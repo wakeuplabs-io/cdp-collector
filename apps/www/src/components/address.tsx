@@ -8,6 +8,7 @@ export const Address = ({
   balance,
   balanceLabel,
   className,
+  decimals,
 }: {
   label?: string;
   address: string;
@@ -15,6 +16,7 @@ export const Address = ({
   balanceLabel?: string;
   balancePending?: boolean;
   className?: string;
+  decimals: number;
 }) => {
   const { copyToClipboard, copied } = useCopyToClipboard();
 
@@ -45,7 +47,7 @@ export const Address = ({
             "text-xs text-muted-foreground absolute right-0 bottom-1 bg-muted rounded-md px-4 py-3"
           )}
         >
-          {formatBalance(balance) + " " + balanceLabel}
+          {formatBalance(balance, decimals) + " " + balanceLabel}
         </div>
       )}
     </div>

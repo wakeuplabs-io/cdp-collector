@@ -43,9 +43,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { poolSummary, isLoading: isLoadingPoolSummary } = usePoolSummary(
     id as string
   );
-  const { donations, isLoading: isLoadingDonations } = useDonations(
-    id as string
-  );
+  const { donations } = useDonations();
   const { members, isLoading: isLoadingPoolMembers } = usePoolMembers(
     id as string
   );
@@ -54,7 +52,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     if (!currentUser && isInitialized) {
       router.push("/auth");
     }
-  }, [currentUser, isInitialized]);
+  }, [currentUser, isInitialized, router]);
 
   const totalDonationsAmount = poolSummary?.totalDonationsAmount ?? 0n;
   const totalDonationsCount = poolSummary?.totalDonationsCount ?? 0n;

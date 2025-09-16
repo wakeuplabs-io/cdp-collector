@@ -15,7 +15,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     if (evmAddress) {
       router.push(`/fundraisers/${id}/donate/method`);
     }
-  }, [evmAddress]);
+  }, [evmAddress, id, router]);
 
   return (
     <div className="p-6 border-t">

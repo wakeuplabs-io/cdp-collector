@@ -25,7 +25,7 @@ export default function Dashboard() {
     if (!currentUser && isInitialized) {
       router.push("/auth");
     }
-  }, [currentUser, isInitialized]);
+  }, [currentUser, isInitialized, router]);
 
   const poolCount = userSummary?.poolCount ?? 0n;
   const totalDonationsAmount = userSummary?.totalDonationsAmount ?? 0n;
@@ -49,7 +49,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold">Welcome back</h1>
           <p className="text-muted-foreground">
-            This is what's been happening with your fundraisers
+            This is what&apos;s been happening with your fundraisers
           </p>
         </div>
 

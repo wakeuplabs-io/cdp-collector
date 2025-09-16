@@ -1,4 +1,3 @@
-import { TOKEN_DECIMALS } from "@/config";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { formatUnits } from "viem";
@@ -13,7 +12,7 @@ export function shortenAddress(address: string) {
 
 export function formatBalance(
   balance: bigint,
-  decimals: number = TOKEN_DECIMALS
+  decimals: number
 ) {
   return parseFloat(Number(formatUnits(balance, decimals)).toFixed(2));
 }

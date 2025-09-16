@@ -12,18 +12,19 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   const router = useRouter();
   const { evmAddress } = useEvmAddress();
-  const { onramp } = useOnramp({ to: evmAddress!, assets: SUPPORTED_ASSETS.map((asset) => asset.symbol) });
+  const { openOnramp } = useOnramp({ to: evmAddress!, assets: SUPPORTED_ASSETS.map((asset) => asset.symbol) });
 
   const onDonateWithFiat = useCallback(async () => {
-    onramp().then(() => {
-      router.push(`/fundraisers/${id}/donate/method/onramp`);
-    });
-  }, [onramp, router, id]);
+    const latestBlock = await publicClient.getBlockNumber();
+    
+    await openOnramp();
+    router.push(`/fundraisers/${id}/donate/method/transfer?startBlock=${latestBlock}`);
+  }, [openOnramp, router, id]);
 
   const onDonateWithTransfer = useCallback(async () => {
     const latestBlock = await publicClient.getBlockNumber();
     router.push(`/fundraisers/${id}/donate/method/transfer?startBlock=${latestBlock}`);
-  }, []);
+  }, [id, router]);
 
   return (
     <div className="space-y-3 p-6">

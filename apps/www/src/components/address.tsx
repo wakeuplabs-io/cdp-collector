@@ -1,22 +1,18 @@
 import { useCopyToClipboard } from "@/hooks/copy";
 import { cn, formatBalance, shortenAddress } from "@/lib/utils";
+import { TokenWithBalance } from "@/types/token";
 import { Check, Copy } from "lucide-react";
 
 export const Address = ({
   label,
   address,
-  balance,
-  balanceLabel,
+  tokenBalance,
   className,
-  decimals,
 }: {
   label?: string;
   address: string;
-  balance?: bigint;
-  balanceLabel?: string;
-  balancePending?: boolean;
+  tokenBalance?: TokenWithBalance;
   className?: string;
-  decimals: number;
 }) => {
   const { copyToClipboard, copied } = useCopyToClipboard();
 
@@ -41,13 +37,13 @@ export const Address = ({
         {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
       </button>
 
-      { balance !== undefined && balanceLabel !== undefined && (
+      {tokenBalance !== undefined && tokenBalance.balance !== undefined && (
         <div
           className={cn(
             "text-xs text-muted-foreground absolute right-0 bottom-1 bg-muted rounded-md px-4 py-3"
           )}
         >
-          {formatBalance(balance, decimals) + " " + balanceLabel}
+          {formatBalance(tokenBalance.balance, tokenBalance.decimals) + " " + tokenBalance.symbol}
         </div>
       )}
     </div>

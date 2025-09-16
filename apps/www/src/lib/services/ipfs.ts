@@ -1,8 +1,8 @@
 import { PinataSDK } from "pinata";
 
 export interface IpfsClient {
-  uploadJSON(json: Object): Promise<string>;
-  downloadJSON(cid: string): Promise<Object>;
+  uploadJSON(json: object): Promise<string>;
+  downloadJSON(cid: string): Promise<object>;
 }
 
 export class PinataIpfs implements IpfsClient {
@@ -15,17 +15,17 @@ export class PinataIpfs implements IpfsClient {
     });
   }
 
-  async uploadJSON(json: Object): Promise<string> {
+  async uploadJSON(json: object): Promise<string> {
     const result = await this.client.upload.public.json(json);
     return result.cid;
   }
 
-  async downloadJSON(cid: string): Promise<Object> {
+  async downloadJSON(cid: string): Promise<object> {
     const result = await this.client.gateways.public.get(cid);
     if (result.contentType !== "application/json") {
       throw new Error("Content type is not JSON");
     }
 
-    return result.data as Object;
+    return result.data as object;
   }
 }

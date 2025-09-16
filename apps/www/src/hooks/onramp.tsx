@@ -10,7 +10,7 @@ export const useOnramp = ({
 }) => {
   const [isLoading, setisLoading] = useState(false);
 
-  const onramp = useCallback(async (amount?: string) => {
+  const openOnramp = useCallback(async (amount?: string) => {
     if (!to) return;
 
     setisLoading(true);
@@ -36,5 +36,5 @@ export const useOnramp = ({
     }
   }, [to, assets]);
 
-  return { onramp, isLoading };
+  return { openOnramp, isLoading };
 };

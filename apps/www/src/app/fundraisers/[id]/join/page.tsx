@@ -13,12 +13,10 @@ import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { keccak256, toBytes } from "viem";
 
-export default function Layout({
+export default function Page({
   params,
-  children,
 }: {
   params: Promise<{ id: string }>;
-  children: React.ReactNode;
 }) {
   const { id } = React.use(params);
   const { pool, isLoading } = usePool(id);

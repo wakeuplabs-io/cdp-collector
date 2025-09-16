@@ -30,20 +30,14 @@ enum Tab {
 
 const Account: React.FC<{
   address: string;
-  balance: bigint;
+  tokenBalance?: TokenWithBalance;
   setTab: (tab: Tab) => void;
-}> = ({ setTab, address, balance }) => {
+}> = ({ setTab, address, tokenBalance }) => {
   const { signOut } = useSignOut();
 
   return (
     <>
-      <Address
-        address={address}
-        balance={balance}
-        balanceLabel={USDC.symbol}
-        decimals={USDC.decimals}
-        className="mb-2"
-      />
+      <Address address={address} tokenBalance={tokenBalance} className="mb-2" />
 
       <Button
         onClick={() => setTab(Tab.Withdraw)}
@@ -97,7 +91,7 @@ const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       });
-  }, [setTab, token, amount, to]);
+  }, [withdraw, setTab, token, amount, to]);
 
   const validation = useMemo(() => {
     if (!to) {
@@ -206,7 +200,7 @@ export const AccountManager = () => {
           <Account
             setTab={setTab}
             address={evmAddress}
-            balance={usdcBalance?.balance ?? BigInt(0)}
+            tokenBalance={usdcBalance}
           />
         ),
       },

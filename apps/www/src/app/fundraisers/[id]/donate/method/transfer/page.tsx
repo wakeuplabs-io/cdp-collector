@@ -19,7 +19,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const startBlock = queryParameters.get("startBlock");
 
   useIncomingTransactions(evmAddress!, SUPPORTED_ASSETS, (tx) => {
-    // TODO: Received transaction, wait for tx confirmation and create donation
+    // Received transaction, let's make donation
     router.push(`/fundraisers/${id}/donate/processing?txHash=${tx.txHash}&amount=${tx.amount}&token=${tx.token}`);
   }, startBlock ? BigInt(startBlock) : undefined); // Optional: start polling from this block
 
@@ -31,7 +31,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     <div className="pt-10 px-6 pb-6">
       <QrCode className="h-40 w-40 mx-auto mb-6" value={evmAddress ?? "0x0"} />
 
-      <Address address={evmAddress ?? "0x0"} className="mb-2" />
+      <Address address={evmAddress ?? "0x0"} className="mb-2"  />
 
       <p className="text-center text-sm mb-10">
         Deposit {SUPPORTED_ASSETS.map((asset) => asset.symbol).join(", ").replace(/, ([^,]*)$/, " or $1")} to this address in{" "}
@@ -39,7 +39,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       </p>
 
       <div className="text-center text-sm mb-10 text-muted-foreground animate-pulse">
-        We'll redirect you as soon as we detect your transaction...
+        We&apos;ll redirect you as soon as we detect your transaction...
       </div>
 
       <Button

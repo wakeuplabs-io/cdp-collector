@@ -52,7 +52,8 @@ export class DistributorService {
   async prepareCreatePool({
     title,
     description,
-    image,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    image, 
     members,
   }: CreatePoolParams): Promise<{
     calls: TxParameters[];
@@ -107,7 +108,7 @@ export class DistributorService {
       topics: log.topics,
     });
 
-    return BigInt((decoded.args as any).poolId);
+    return BigInt((decoded.args as { poolId: bigint }).poolId);
   }
 
   async prepareJoinPool(

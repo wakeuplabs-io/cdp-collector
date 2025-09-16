@@ -382,7 +382,7 @@ export const CreateFundraiser = ({
                   <div className="text-sm text-muted-foreground">Joined</div>
                 }
               />
-              {members.map((member, index) => (
+              {members.map((member) => (
                 <MemberItem
                   key={member.id}
                   member={member}
@@ -410,7 +410,7 @@ export const CreateFundraiser = ({
                   I have shared invitation links
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  These won't be available once you close the dialog.
+                  These won&apos;t be available once you close the dialog.
                 </p>
               </div>
             </Label>

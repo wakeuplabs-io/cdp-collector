@@ -18,6 +18,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
 
   return (
     <Button
+      className={className}
       onClick={() => copyToClipboard(text)}
       {...props}
     >

@@ -16,8 +16,10 @@ export const CryptoTokenSelector: React.FC<{
   const [isOpen, setIsOpen] = useState(false);
 
   const handleTokenSelect = (token: TokenWithBalance) => {
+    onChange(token);
     setSelectedToken(token);
     setIsOpen(false);
+
   };
 
   return (

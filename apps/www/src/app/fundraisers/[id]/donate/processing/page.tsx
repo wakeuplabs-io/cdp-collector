@@ -40,7 +40,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       <span className="text-sm text-muted-foreground">
         Processing transaction {shortenAddress(txHash ?? "")} for {amount} {token?.symbol}.
         <br />
-        Don't close this page...
+        Don&apos;t close this page...
       </span>
     </div>
   );

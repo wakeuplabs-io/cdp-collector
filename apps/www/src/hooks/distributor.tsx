@@ -207,7 +207,6 @@ export const useMakeDonation = () => {
 };
 
 export const useDonations = (
-  poolId: string
 ): { donations: Donation[] | undefined; isLoading: boolean } => {
   // const { data, isLoading } = useSWR(`/api/distributor/${poolId}/donations`, {
   //   fetcher: () => distributorService.getDonations(BigInt(poolId)),

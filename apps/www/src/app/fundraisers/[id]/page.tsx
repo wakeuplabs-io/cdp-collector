@@ -2,11 +2,11 @@
 
 import { AccountManager } from "@/components/account-manager";
 import { Avatar } from "@/components/avatar";
+import { ShareCollectorLink } from "@/components/copy-collector-link";
 import { DonationCard } from "@/components/donations/card";
 import { DeactivateFundraiser } from "@/components/fundraisers/deactivate";
 import { FundraiserStatus } from "@/components/fundraisers/status";
 import { Button } from "@/components/ui/button";
-import { CopyButton } from "@/components/ui/copy";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +26,7 @@ import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import {
   DollarSign,
   EllipsisVerticalIcon,
-  MoveLeftIcon,
-  UsersIcon,
+  MoveLeftIcon, UsersIcon
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -108,11 +107,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <CopyButton
-              text={`${window.location.origin}/fundraisers/${id}/donate`}
-              copied={<span>Copied</span>}
-              fallback={<span>Copy Collector Link</span>}
-            />
+            <ShareCollectorLink
+              link={`${window.location.origin}/fundraisers/${id}/donate`}
+            >
+              <Button>
+                Share Collector Link
+              </Button>
+            </ShareCollectorLink>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

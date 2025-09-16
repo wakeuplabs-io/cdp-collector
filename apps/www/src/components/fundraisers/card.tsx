@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { useCopyToClipboard } from "@/hooks/copy";
 import { usePoolSummary } from "@/hooks/distributor";
 import { shortenAddress } from "@/lib/utils";
 import { Pool } from "@/types/distributor";
-import { ArrowUpRight, CheckIcon, CopyIcon } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ShareCollectorLink } from "../copy-collector-link";
 import { FundraiserStatus } from "./status";
 
 export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
   const router = useRouter();
-  const { copyToClipboard, copied } = useCopyToClipboard();
-  const { poolSummary } = usePoolSummary(pool.id.toString());
+  const { poolSummary } = usePoolSummary(pool.id);
 
   return (
     <div className="border rounded-xl p-6">
@@ -23,7 +22,9 @@ export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
       </div>
 
       <div className="bg-muted/50 rounded-xl p-4 mt-4 flex items-center justify-between">
-        <span className="font-bold text-2xl">${poolSummary?.totalDonationsAmount ?? 0}</span>
+        <span className="font-bold text-2xl">
+          ${poolSummary?.totalDonationsAmount ?? 0}
+        </span>
         <span className="text-muted-foreground border rounded-full bg-muted px-2 py-1 text-sm font-medium">
           {poolSummary?.totalDonationsAmount ?? 0} USDC
         </span>
@@ -44,23 +45,13 @@ export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
       </div>
 
       <div className="mt-4 flex items-center gap-2">
-        <Button
-          size="lg"
-          variant="outline"
-          className="flex-1"
-          onClick={() =>
-            copyToClipboard(
-              `${window.location.origin}/fundraisers/${pool.id}/donate`
-            )
-          }
+        <ShareCollectorLink
+          link={`${window.location.origin}/fundraisers/${pool.id}/donate`}
         >
-          {copied ? (
-            <CheckIcon className="w-5 h-5" />
-          ) : (
-            <CopyIcon className="w-5 h-5" />
-          )}
-          {copied ? "Copied" : "Copy Link"}
-        </Button>
+          <Button size="lg" variant="outline" className="flex-1">
+            Share Collector Link
+          </Button>
+        </ShareCollectorLink>
         <Button
           size="lg"
           variant="outline"

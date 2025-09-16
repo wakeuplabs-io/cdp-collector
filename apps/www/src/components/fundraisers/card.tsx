@@ -5,6 +5,7 @@ import { shortenAddress } from "@/lib/utils";
 import { Pool } from "@/types/distributor";
 import { ArrowUpRight, CheckIcon, CopyIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { FundraiserStatus } from "./status";
 
 export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
   const router = useRouter();
@@ -18,9 +19,7 @@ export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
           <h2 className="text-2xl font-bold">{pool.title}</h2>
           <p className="text-muted-foreground">{pool.description}</p>
         </div>
-        <div className="bg-green-200/50 border border-green-500 text-green-500 px-2 h-6 flex items-center justify-center rounded-full text-xs font-medium">
-          Active
-        </div>
+        <FundraiserStatus status={pool.status} />
       </div>
 
       <div className="bg-muted/50 rounded-xl p-4 mt-4 flex items-center justify-between">

@@ -15,6 +15,6 @@ export const useBalance = (address?: Address) => {
 
 export const useWithdraw = () => {
   return {
-    isPending: false,
+    isLoading: false,
   };
 };

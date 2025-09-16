@@ -1,5 +1,10 @@
-  
-import { Pool, PoolMember, PoolStatus, PoolSummary, UserSummary } from "@/types/distributor";
+import {
+  Pool,
+  PoolMember,
+  PoolStatus,
+  PoolSummary,
+  UserSummary,
+} from "@/types/distributor";
 import { TxParameters } from "@/types/tx";
 import {
   Address,
@@ -18,7 +23,7 @@ type CreatePoolParams = {
   description: string;
   image?: File;
   members: {
-    email: string;
+    id: string;
     proportion: number;
   }[];
 };
@@ -33,7 +38,18 @@ export class DistributorService {
     this.publicClient = publicClient;
   }
 
-
+  generateInvitation(): { code: `0x${string}`; hash: `0x${string}` } {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    const code = ("0x" +
+      Array.from(array)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")) as `0x${string}`;
+    return {
+      code,
+      hash: keccak256(toBytes(code)),
+    };
+  }
 
   async prepareCreatePool({
     title,
@@ -42,16 +58,11 @@ export class DistributorService {
     members,
   }: CreatePoolParams): Promise<{
     tx: TxParameters;
-    members: { code: string; member: string; proportion: number }[];
+    members: { code: string; id: string; proportion: number }[];
   }> {
-    const invitationCodes = members.map(() => {
-      const array = new Uint8Array(32);
-      crypto.getRandomValues(array);
-      return array.toString();
+    const invitations = members.map(() => {
+      return this.generateInvitation();
     });
-    const invitationCodesHashes = invitationCodes.map((code) =>
-      keccak256(toBytes(code))
-    );
     const percentages = members.map((member) =>
       BigInt(Math.floor(member.proportion * 100))
     );
@@ -68,16 +79,15 @@ export class DistributorService {
             title,
             description,
             imageCfi,
-            invitationCodesHashes,
+            invitations.map((invitation) => invitation.hash),
             percentages,
           ],
         }),
         value: 0n,
       },
       members: members.map((member, index) => ({
-        code: invitationCodes[index],
-        member: member.email,
-        proportion: member.proportion,
+        ...member,
+        code: invitations[index].code,
       })),
     };
   }
@@ -97,7 +107,31 @@ export class DistributorService {
       topics: log.topics,
     });
 
-    return Number((decoded.args as any).poolId);
+    return BigInt((decoded.args as any).poolId);
+  }
+
+  async prepareJoinPool(
+    poolId: bigint,
+    invitationCode: string
+  ): Promise<TxParameters> {
+    if (!invitationCode) {
+      throw new Error("Invitation code is required");
+    }
+
+    // Convert string to bytes32 format if it's not already hex
+    const codeAsBytes32 = invitationCode.startsWith('0x') 
+      ? invitationCode as `0x${string}`
+      : `0x${invitationCode}` as `0x${string}`;
+
+    return {
+      to: this.distributorAddress,
+      data: encodeFunctionData({
+        abi: distributorAbi,
+        functionName: "joinPool",
+        args: [poolId, codeAsBytes32],
+      }),
+      value: 0n,
+    };
   }
 
   async getPoolSummary(poolId: bigint): Promise<PoolSummary> {
@@ -111,7 +145,11 @@ export class DistributorService {
     return summary;
   }
 
-  async getPoolMembers(poolId: bigint, offset: number, limit: number): Promise<PoolMember[]> {
+  async getPoolMembers(
+    poolId: bigint,
+    offset: number,
+    limit: number
+  ): Promise<PoolMember[]> {
     const members = await this.publicClient.readContract({
       address: this.distributorAddress,
       abi: distributorAbi,
@@ -148,7 +186,11 @@ export class DistributorService {
     return count;
   }
 
-  async getUserPools(address: Address, offset: number, limit: number): Promise<Pool[]> {
+  async getUserPools(
+    address: Address,
+    offset: number,
+    limit: number
+  ): Promise<Pool[]> {
     const pools = await this.publicClient.readContract({
       address: this.distributorAddress,
       abi: distributorAbi,
@@ -175,6 +217,6 @@ export class DistributorService {
       ...pool,
       createdAt: new Date(Number(pool.createdAt)),
       status: pool.status as PoolStatus,
-    }
+    };
   }
 }

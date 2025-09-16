@@ -86,7 +86,7 @@ interface IDistributor is
     /// @notice Joins a pool using invitation code (claims an address(0) slot)
     /// @param poolId The pool identifier
     /// @param invitationCode The invitation code for the slot
-    function joinPool(uint256 poolId, string calldata invitationCode) external;
+    function joinPool(uint256 poolId, bytes32 invitationCode) external;
 
     /// @notice Deactivates a pool (only creator can call)
     /// @param poolId The pool identifier

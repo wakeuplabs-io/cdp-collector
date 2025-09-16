@@ -8,7 +8,13 @@ import {
 } from "@/components/ui/dialog";
 import { useCreatePool } from "@/hooks/distributor";
 import { useEvmAddress } from "@coinbase/cdp-hooks";
-import { PlusIcon, UploadCloudIcon, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  CopyIcon,
+  PlusIcon,
+  UploadCloudIcon,
+  XIcon,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -60,14 +66,14 @@ export const CreateFundraiser = ({
   });
   const [members, setMembers] = useState<
     {
-      email: string;
+      id: string;
       proportion: number;
       code?: string;
     }[]
   >([]);
   const [errors, setErrors] = useState<string[]>([]);
-const [poolId, setPoolId] = useState<string | null>(null);
-  const { createPool, isPending: isCreatingPool } = useCreatePool();
+  const [poolId, setPoolId] = useState<string | null>(null);
+  const { createPool, isLoading: isCreatingPool } = useCreatePool();
 
   function onSubmitMetadata() {
     const result = metadataForm.safeParse(metadata);
@@ -96,7 +102,7 @@ const [poolId, setPoolId] = useState<string | null>(null);
     setNewMemberProportion("0");
     setMembers([
       ...members,
-      { email: newMemberEmail, proportion: Number(newMemberProportion) },
+      { id: newMemberEmail, proportion: Number(newMemberProportion) },
     ]);
   }
 
@@ -106,20 +112,21 @@ const [poolId, setPoolId] = useState<string | null>(null);
       description: metadata.description,
       image: undefined,
       members,
-    }).then(({ hash, poolId }) => {
-      console.log("poolId", poolId, hash)
-      setPoolId(poolId.toString())
-      setTab("success");
-      toast.success("Fundraiser created successfully", {
-        description: `Transaction hash: ${hash}`,
+    })
+      .then(({ hash, poolId, members }) => {
+        setPoolId(poolId.toString());
+        setMembers(members);
+        setTab("success");
+        toast.success("Fundraiser created successfully", {
+          description: `Transaction hash: ${hash}`,
+        });
+      })
+      .catch((error) => {
+        console.log("error", error);
+        toast.error("Couldn't create fundraiser", {
+          description: error.message,
+        });
       });
-      
-    }).catch((error) => {
-      console.log("error", error)
-      toast.error("Couldn't create fundraiser", {
-        description: error.message,
-      });
-    });
   }
 
   useEffect(() => {
@@ -135,10 +142,7 @@ const [poolId, setPoolId] = useState<string | null>(null);
   }, [open]);
 
   const creatorProportion = useMemo(() => {
-    return (
-      100 -
-      members.reduce((acc, member) => acc + member.proportion, 0)
-    );
+    return 100 - members.reduce((acc, member) => acc + member.proportion, 0);
   }, [members]);
 
   return (
@@ -277,7 +281,7 @@ const [poolId, setPoolId] = useState<string | null>(null);
             <div className="px-6 mt-4 space-y-2">
               <MemberItem
                 member={{
-                  email: "You",
+                  id: "You",
                   proportion: creatorProportion,
                 }}
                 action={
@@ -293,7 +297,7 @@ const [poolId, setPoolId] = useState<string | null>(null);
               />
               {members.map((member, index) => (
                 <MemberItem
-                  key={member.email}
+                  key={member.id}
                   member={member}
                   action={
                     <Button
@@ -352,7 +356,7 @@ const [poolId, setPoolId] = useState<string | null>(null);
             <div className="px-6 mt-4 space-y-2">
               <MemberItem
                 member={{
-                  email: "You",
+                  id: "You",
                   proportion: creatorProportion,
                 }}
                 action={
@@ -361,12 +365,16 @@ const [poolId, setPoolId] = useState<string | null>(null);
               />
               {members.map((member, index) => (
                 <MemberItem
-                  key={member.email}
+                  key={member.id}
                   member={member}
                   action={
                     <CopyButton
-                      text={`${window.location.origin}/fundraisers/${member.email}/join`}
+                      variant="ghost"
+                      size="icon"
+                      text={`${window.location.origin}/fundraisers/${poolId}/join?code=${member.code}`}
                       className="h-8 w-8"
+                      copied={<CheckIcon className="w-4 h-4" />}
+                      fallback={<CopyIcon className="w-4 h-4" />}
                     />
                   }
                 />
@@ -389,10 +397,13 @@ const [poolId, setPoolId] = useState<string | null>(null);
             </Label>
 
             <div className="flex justify-end gap-2 mt-6 border-t p-6">
-              <Button disabled={!shared} onClick={() => {
-                setOpen(false);
-                router.push(`/fundraisers/${poolId}`)
-              }}>
+              <Button
+                disabled={!shared}
+                onClick={() => {
+                  setOpen(false);
+                  router.push(`/fundraisers/${poolId}`);
+                }}
+              >
                 Done
               </Button>
             </div>
@@ -407,7 +418,7 @@ const MemberItem = ({
   member,
   action,
 }: {
-  member: { email: string; proportion: number; code?: string };
+  member: { id: string; proportion: number; code?: string };
   action?: React.ReactNode;
 }) => {
   return (
@@ -421,7 +432,7 @@ const MemberItem = ({
           className="rounded-full"
         />
         <div className="flex gap-2">
-          <div className="text-sm">{member.email}</div>
+          <div className="text-sm">{member.id}</div>
           <div className="text-sm text-muted-foreground">
             {member.proportion}%
           </div>

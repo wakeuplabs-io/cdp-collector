@@ -11,19 +11,23 @@ import useSWR from "swr";
 export const useCreatePool = () => {
   const { currentUser } = useCurrentUser();
   const { sendUserOperation } = useSendUserOperation();
-  const [isPending, setIsPending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const createPool = async (pool: {
     title: string;
     description: string;
     image?: File;
     members: {
-      email: string;
+      id: string;
       proportion: number;
     }[];
-  }) => {
+  }): Promise<{
+    hash: string;
+    poolId: bigint;
+    members: { code: string; id: string; proportion: number }[];
+  }> => {
     try {
-      setIsPending(true);
+      setIsLoading(true);
       const smartAccount = currentUser?.evmSmartAccounts?.[0];
       if (!smartAccount) {
         throw new Error("No smart account found");
@@ -45,11 +49,53 @@ export const useCreatePool = () => {
 
       return { poolId, hash: result.userOperationHash, members };
     } finally {
-      setIsPending(false);
+      setIsLoading(false);
     }
   };
 
-  return { createPool, isPending };
+  return { createPool, isLoading };
+};
+
+export const useJoinPool = () => {
+  const { currentUser } = useCurrentUser();
+  const { sendUserOperation } = useSendUserOperation();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const joinPool = async (
+    poolId: string,
+    invitationCode: string
+  ): Promise<{ hash: string }> => {
+    try {
+      setIsLoading(true);
+      const smartAccount = currentUser?.evmSmartAccounts?.[0];
+      if (!smartAccount) {
+        throw new Error("No smart account found");
+
+      }
+
+      const result = await sendUserOperation({
+        evmSmartAccount: smartAccount,
+        network: NETWORK,
+        calls: [
+          await distributorService.prepareJoinPool(
+            BigInt(poolId),
+            invitationCode
+          )
+        ],
+        useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
+      });
+
+      await bundlerClient.waitForUserOperationReceipt({
+        hash: result.userOperationHash,
+      });
+
+      return { hash: result.userOperationHash };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { joinPool, isLoading };
 };
 
 export const useUserSummary = () => {
@@ -62,7 +108,7 @@ export const useUserSummary = () => {
     },
   });
 
-  return { userSummary: data, isLoading };
+  return { userSummary: data, isLoading: isLoading };
 };
 
 export const useUserPoolsCount = () => {
@@ -96,12 +142,15 @@ export const usePoolSummary = (poolId: string) => {
   return { poolSummary: data, isLoading };
 };
 
-export function usePoolMembers(poolId: string): { poolMembers: PoolMember[]; isLoading: boolean } {
+export function usePoolMembers(poolId: string): {
+  members: PoolMember[];
+  isLoading: boolean;
+} {
   const { data, isLoading } = useSWR(`/api/distributor/${poolId}/members`, {
     fetcher: () => distributorService.getPoolMembers(BigInt(poolId), 0, 100), // TODO: implement pagination
   });
 
-  return { poolMembers: data, isLoading };
+  return { members: data, isLoading };
 }
 
 export function useUserPools(): { userPools: Pool[]; isLoading: boolean } {

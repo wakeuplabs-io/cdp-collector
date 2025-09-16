@@ -6,6 +6,22 @@ import { getAddress, keccak256, parseUnits, toBytes } from "viem";
 const BYTES_32_ZERO =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
+const generateInvitationCode = (): {
+  code: `0x${string}`;
+  hash: `0x${string}`;
+} => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  const code = ("0x" +
+    Array.from(array)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("")) as `0x${string}`;
+  return {
+    code,
+    hash: keccak256(toBytes(code)),
+  };
+};
+
 describe("Distributor", function () {
   async function deployDistributorFixture() {
     const [owner, creator, addr1, addr2, addr3] =
@@ -81,19 +97,18 @@ describe("Distributor", function () {
     );
 
     const multiMemberPoolId = 2n;
-    const invitationCode = "1234567890";
-    const invitationCodeHash = keccak256(toBytes(invitationCode));
+    const invitation = generateInvitationCode();
     await distributor.write.createPool(
       [
         "Test Pool",
         "A test pool for fundraising",
         "https://example.com/image.png",
-        [invitationCodeHash],
+        [invitation.hash],
         [5000n],
       ],
       { account: creator.account }
     );
-    await distributor.write.joinPool([multiMemberPoolId, invitationCode], {
+    await distributor.write.joinPool([multiMemberPoolId, invitation.code], {
       account: addr2.account,
     });
 
@@ -165,19 +180,18 @@ describe("Distributor", function () {
 
     // multi member pool
     const multiMemberPoolId = 2n;
-    const invitationCode = "1234567890";
-    const invitationCodeHash = keccak256(toBytes(invitationCode));
+    const invitation = generateInvitationCode();
     await distributor.write.createPool(
       [
         "Test Pool",
         "A test pool for fundraising",
         "https://example.com/image.png",
-        [invitationCodeHash],
+        [invitation.hash],
         [5000n],
       ],
       { account: creator.account }
     );
-    await distributor.write.joinPool([multiMemberPoolId, invitationCode], {
+    await distributor.write.joinPool([multiMemberPoolId, invitation.code], {
       account: donor.account,
     });
 
@@ -784,23 +798,19 @@ describe("Distributor", function () {
         deployDistributorFixture
       );
 
-      // Create hash for invitation code "secret123"
-      const invitationCode = "secret123";
-      const invitationCodeHash = keccak256(
-        `0x${Buffer.from(invitationCode, "utf8").toString("hex")}`
-      );
+      const invitation = generateInvitationCode();
 
       // Create pool with invitation slot
       await distributor.write.createPool([
         "Invitation Pool",
         "Pool with invitation codes",
         "https://example.com/image.png",
-        [invitationCodeHash], // Hash for the slot
+        [invitation.hash], // Hash for the slot
         [4000n], // 40%
       ], { account: creator.account });
 
       // addr2 joins using invitation code
-      await distributor.write.joinPool([1n, invitationCode], {
+      await distributor.write.joinPool([1n, invitation.code], {
         account: addr2.account,
       });
 
@@ -824,20 +834,17 @@ describe("Distributor", function () {
         deployDistributorFixture
       );
 
-      const invitationCode = "secret123";
-      const invitationCodeHash = keccak256(
-        `0x${Buffer.from(invitationCode, "utf8").toString("hex")}`
-      );
+      const invitation = generateInvitationCode();
 
       await distributor.write.createPool([
         "Invitation Pool",
         "Description",
         "https://example.com/image.png",
-        [invitationCodeHash],
+        [invitation.hash],
         [5000n],
       ], { account: creator.account });
 
-      const hash = await distributor.write.joinPool([1n, invitationCode], {
+      const hash = await distributor.write.joinPool([1n, invitation.code], {
         account: addr2.account,
       });
 
@@ -855,21 +862,18 @@ describe("Distributor", function () {
         deployDistributorFixture
       );
 
-      const invitationCode = "secret123";
-      const invitationCodeHash = keccak256(
-        `0x${Buffer.from(invitationCode, "utf8").toString("hex")}`
-      );
+      const invitation = generateInvitationCode();
 
       await distributor.write.createPool([
         "Invitation Pool",
         "Description",
         "https://example.com/image.png",
-        [invitationCodeHash],
+        [invitation.hash],
         [5000n],
       ], { account: creator.account });
 
       await expect(
-        distributor.write.joinPool([1n, "wrongcode"], {
+        distributor.write.joinPool([1n, "0x0000000000000000000000000000000000000000000000000000000000000003"], {
           account: addr2.account,
         })
       ).to.be.rejectedWith("InvalidInvitationCode");
@@ -890,7 +894,7 @@ describe("Distributor", function () {
       ], { account: creator.account });
 
       await expect(
-        distributor.write.joinPool([1n, "anycode"], {
+        distributor.write.joinPool([1n, "0x0000000000000000000000000000000000000000000000000000000000000001"], {
           account: addr2.account,
         })
       ).to.be.rejectedWith("InvalidInvitationCode");
@@ -901,10 +905,7 @@ describe("Distributor", function () {
         deployDistributorFixture
       );
 
-      const invitationCode = "secret123";
-      const invitationCodeHash = keccak256(
-        `0x${Buffer.from(invitationCode, "utf8").toString("hex")}`
-      );
+      const invitation = generateInvitationCode();
 
       await distributor.write.createPool([
         "Invitation Pool",
@@ -912,19 +913,19 @@ describe("Distributor", function () {
         "https://example.com/image.png",
         [
           "0x0000000000000000000000000000000000000000000000000000000000000000",
-          invitationCodeHash,
+          invitation.hash,
         ],
         [3000n, 2000n],
       ], { account: creator.account });
 
       // First join should work
-      await distributor.write.joinPool([1n, invitationCode], {
+      await distributor.write.joinPool([1n, invitation.code], {
         account: addr2.account,
       });
 
       // Second join should fail
       await expect(
-        distributor.write.joinPool([1n, "anythingelse"], {
+        distributor.write.joinPool([1n, "0x0000000000000000000000000000000000000000000000000000000000000002"], {
           account: addr2.account,
         })
       ).to.be.rejectedWith("MemberAlreadyInPool");
@@ -945,7 +946,7 @@ describe("Distributor", function () {
       ], { account: creator.account });
 
       await expect(
-        distributor.write.joinPool([1n, "anycode"], {
+        distributor.write.joinPool([1n, "0x0000000000000000000000000000000000000000000000000000000000000001"], {
           account: addr2.account,
         })
       ).to.be.rejectedWith("InvalidInvitationCode");
@@ -956,30 +957,24 @@ describe("Distributor", function () {
         deployDistributorFixture
       );
 
-      const code1 = "secret123";
-      const code2 = "secret456";
-      const hash1 = keccak256(
-        `0x${Buffer.from(code1, "utf8").toString("hex")}`
-      );
-      const hash2 = keccak256(
-        `0x${Buffer.from(code2, "utf8").toString("hex")}`
-      );
+      const code1 = generateInvitationCode();
+      const code2 = generateInvitationCode();
 
       await distributor.write.createPool([
         "Multi-invitation Pool",
         "Description",
         "https://example.com/image.png",
-        [hash1, hash2], // Different codes for each slot
+        [code1.hash, code2.hash], // Different codes for each slot
         [4000n, 3000n], // 40% and 30%
       ], { account: creator.account });
 
       // Join with first code
-      await distributor.write.joinPool([1n, code1], {
+      await distributor.write.joinPool([1n, code1.code], {
         account: addr2.account,
       });
 
       // Join with second code
-      await distributor.write.joinPool([1n, code2], {
+      await distributor.write.joinPool([1n, code2.code], {
         account: addr3.account,
       });
 
@@ -1001,10 +996,7 @@ describe("Distributor", function () {
       const { distributor, mockUSDC, creator, addr2, addr3 } =
         await loadFixture(deployDistributorFixture);
 
-      const invitationCode = "secret123";
-      const invitationCodeHash = keccak256(
-        `0x${Buffer.from(invitationCode, "utf8").toString("hex")}`
-      );
+      const invitation = generateInvitationCode();
 
       // Create pool with invitation slot (creator gets 80%, invitation slot gets 20%)
       await distributor.write.createPool(
@@ -1012,14 +1004,14 @@ describe("Distributor", function () {
           "Functional Pool",
           "Description",
           "https://example.com/image.png",
-          [invitationCodeHash],
+          [invitation.hash],
           [2000n],
         ],
         { account: creator.account }
       );
 
       // addr3 joins
-      await distributor.write.joinPool([1n, invitationCode], {
+      await distributor.write.joinPool([1n, invitation.code], {
         account: addr3.account,
       });
 
@@ -1066,7 +1058,7 @@ describe("Distributor", function () {
       );
 
       await expect(
-        distributor.write.joinPool([999n, "anycode"], {
+        distributor.write.joinPool([999n, "0x0000000000000000000000000000000000000000000000000000000000000001"], {
           account: addr1.account,
         })
       ).to.be.rejectedWith("PoolNotFound");
@@ -1077,16 +1069,13 @@ describe("Distributor", function () {
         deployDistributorFixture
       );
 
-      const invitationCode = "secret123";
-      const invitationCodeHash = keccak256(
-        `0x${Buffer.from(invitationCode, "utf8").toString("hex")}`
-      );
+      const invitation = generateInvitationCode();
 
       await distributor.write.createPool([
         "Invitation Pool",
         "Description",
         "https://example.com/image.png",
-        [invitationCodeHash],
+        [invitation.hash],
         [5000n],
       ]);
 
@@ -1094,7 +1083,7 @@ describe("Distributor", function () {
       await distributor.write.deactivatePool([1n]);
 
       await expect(
-        distributor.write.joinPool([1n, invitationCode], {
+        distributor.write.joinPool([1n, invitation.code], {
           account: addr2.account,
         })
       ).to.be.rejectedWith("PoolInactive");
@@ -1109,7 +1098,7 @@ describe("Distributor", function () {
         );
 
         const pool = await distributor.read.getPool([singleMemberPoolId]);
-        
+
         expect(pool.id).to.equal(singleMemberPoolId);
         expect(pool.creator).to.equal(getAddress(creator.account.address));
         expect(pool.title).to.equal("Test Pool");
@@ -1123,7 +1112,7 @@ describe("Distributor", function () {
         const { distributor } = await loadFixture(deployDistributorFixture);
 
         const pool = await distributor.read.getPool([999n]);
-        
+
         expect(pool.id).to.equal(0n);
         expect(pool.creator).to.equal("0x0000000000000000000000000000000000000000");
         expect(pool.title).to.equal("");
@@ -1136,12 +1125,12 @@ describe("Distributor", function () {
       it("Should return correct status for pending pool", async function () {
         const { distributor, creator } = await loadFixture(deployDistributorFixture);
 
-        const invitationCodeHash = keccak256(toBytes("secret123"));
+        const invitation = generateInvitationCode();
         await distributor.write.createPool([
           "Pending Pool",
           "Pool description",
           "https://example.com/image.png",
-          [invitationCodeHash],
+          [invitation.hash],
           [5000n],
         ], { account: creator.account });
 
@@ -1166,7 +1155,7 @@ describe("Distributor", function () {
         );
 
         const summary = await distributor.read.getPoolSummary([singleMemberPoolId]);
-        
+
         expect(summary.totalDonationsAmount).to.equal(0n);
         expect(summary.totalDonationsCount).to.equal(0n);
         expect(summary.uniqueDonatorsCount).to.equal(0n);
@@ -1204,7 +1193,7 @@ describe("Distributor", function () {
         });
 
         const summary = await distributor.read.getPoolSummary([singleMemberPoolId]);
-        
+
         expect(summary.totalDonationsAmount).to.equal(donationAmount1 + donationAmount2 + donationAmount1);
         expect(summary.totalDonationsCount).to.equal(3n);
         expect(summary.uniqueDonatorsCount).to.equal(2n); // addr2 and addr3
@@ -1214,7 +1203,7 @@ describe("Distributor", function () {
         const { distributor } = await loadFixture(deployDistributorFixture);
 
         const summary = await distributor.read.getPoolSummary([999n]);
-        
+
         expect(summary.totalDonationsAmount).to.equal(0n);
         expect(summary.totalDonationsCount).to.equal(0n);
         expect(summary.uniqueDonatorsCount).to.equal(0n);
@@ -1243,14 +1232,14 @@ describe("Distributor", function () {
       it("Should return correct count for pool with invitation slots", async function () {
         const { distributor, creator } = await loadFixture(deployDistributorFixture);
 
-        const invitationCodeHash1 = keccak256(toBytes("secret1"));
-        const invitationCodeHash2 = keccak256(toBytes("secret2"));
-        
+        const invitation1 = generateInvitationCode();
+        const invitation2 = generateInvitationCode();
+
         await distributor.write.createPool([
           "Multi-slot Pool",
           "Pool with multiple invitation slots",
           "https://example.com/image.png",
-          [invitationCodeHash1, invitationCodeHash2],
+          [invitation1.hash, invitation2.hash],
           [3000n, 2000n],
         ], { account: creator.account });
 
@@ -1273,7 +1262,7 @@ describe("Distributor", function () {
         );
 
         const members = await distributor.read.getPoolMembers([singleMemberPoolId, 0n, 100n]);
-        
+
         expect(members).to.have.lengthOf(1);
         expect(members[0].member).to.equal(getAddress(creator.account.address));
         expect(members[0].percentage).to.equal(10000n); // 100%
@@ -1283,15 +1272,15 @@ describe("Distributor", function () {
       it("Should handle pagination correctly", async function () {
         const { distributor, creator } = await loadFixture(deployDistributorFixture);
 
-        const invitationCodeHash1 = keccak256(toBytes("secret1"));
-        const invitationCodeHash2 = keccak256(toBytes("secret2"));
-        const invitationCodeHash3 = keccak256(toBytes("secret3"));
-        
+        const invitation1 = generateInvitationCode();
+        const invitation2 = generateInvitationCode();
+        const invitation3 = generateInvitationCode();
+
         await distributor.write.createPool([
           "Large Pool",
           "Pool with multiple members",
           "https://example.com/image.png",
-          [invitationCodeHash1, invitationCodeHash2, invitationCodeHash3],
+          [invitation1.hash, invitation2.hash, invitation3.hash],
           [2000n, 2000n, 2000n],
         ], { account: creator.account });
 
@@ -1316,7 +1305,7 @@ describe("Distributor", function () {
         const { distributor, creator } = await loadFixture(deployDistributorFixture);
 
         const invitationCodeHash = keccak256(toBytes("secret123"));
-        
+
         await distributor.write.createPool([
           "Invitation Pool",
           "Pool with invitation slot",
@@ -1326,7 +1315,7 @@ describe("Distributor", function () {
         ], { account: creator.account });
 
         const members = await distributor.read.getPoolMembers([1n, 0n, 100n]);
-        
+
         expect(members).to.have.lengthOf(2);
         // Creator
         expect(members[0].member).to.equal(getAddress(creator.account.address));
@@ -1397,20 +1386,19 @@ describe("Distributor", function () {
           deployDistributorFixture
         );
 
-        const invitationCode = "secret123";
-        const invitationCodeHash = keccak256(toBytes(invitationCode));
-        
+        const invitation = generateInvitationCode();
+
         // Create pool: creator 70%, invitation slot 30%
         await distributor.write.createPool([
           "Split Pool",
           "Pool for testing splits",
           "https://example.com/image.png",
-          [invitationCodeHash],
+          [invitation.hash],
           [3000n],
         ], { account: creator.account });
 
         // addr2 joins
-        await distributor.write.joinPool([1n, invitationCode], {
+        await distributor.write.joinPool([1n, invitation.code], {
           account: addr2.account,
         });
 
@@ -1426,7 +1414,7 @@ describe("Distributor", function () {
         // Check balances
         const creatorBalance = await distributor.read.getBalanceOf([creator.account.address]);
         const addr2Balance = await distributor.read.getBalanceOf([addr2.account.address]);
-        
+
         expect(creatorBalance).to.equal(parseUnits("700", 6)); // 70%
         expect(addr2Balance).to.equal(parseUnits("300", 6)); // 30%
       });
@@ -1448,7 +1436,7 @@ describe("Distributor", function () {
         );
 
         const summary = await distributor.read.getUserSummary([addr3.account.address]);
-        
+
         expect(summary.totalDonationsAmount).to.equal(0n);
         expect(summary.totalDonationsCount).to.equal(0n);
         expect(summary.poolCount).to.equal(0n);
@@ -1500,7 +1488,7 @@ describe("Distributor", function () {
         });
 
         const summary = await distributor.read.getUserSummary([creator.account.address]);
-        
+
         expect(summary.totalDonationsAmount).to.equal(donation1 + donation2 + donation3);
         expect(summary.totalDonationsCount).to.equal(3n);
         expect(summary.poolCount).to.equal(2n);
@@ -1511,20 +1499,19 @@ describe("Distributor", function () {
           deployDistributorFixture
         );
 
-        const invitationCode = "secret123";
-        const invitationCodeHash = keccak256(toBytes(invitationCode));
-        
+          const invitation = generateInvitationCode();
+
         // Creator creates pool
         await distributor.write.createPool([
           "Invitation Pool",
           "Pool with invitation",
           "https://example.com/image.png",
-          [invitationCodeHash],
+          [invitation.hash],
           [5000n],
         ], { account: creator.account });
 
         // addr2 joins
-        await distributor.write.joinPool([1n, invitationCode], {
+        await distributor.write.joinPool([1n, invitation.code], {
           account: addr2.account,
         });
 
@@ -1585,7 +1572,7 @@ describe("Distributor", function () {
         );
 
         const initialCount = await distributor.read.getUserPoolsCount([creator.account.address]);
-        
+
         // Create another pool
         await distributor.write.createPool([
           "New Pool",
@@ -1617,12 +1604,12 @@ describe("Distributor", function () {
 
         const pools = await distributor.read.getUserPools([creator.account.address, 0n, 100n]);
         expect(pools).to.have.lengthOf(3);
-        
+
         // Verify pool data
         expect(pools[0].id).to.equal(1n);
         expect(pools[0].creator).to.equal(getAddress(creator.account.address));
         expect(pools[0].title).to.equal("Test Pool");
-        
+
         expect(pools[1].id).to.equal(2n);
         expect(pools[2].id).to.equal(3n);
       });

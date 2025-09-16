@@ -65,7 +65,7 @@ const Account: React.FC<{
 const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
   const { evmAddress } = useEvmAddress();
   const { data: balance } = useBalance(evmAddress ?? undefined);
-  const { isPending: isWithdrawing } = useWithdraw();
+  const { isLoading: isWithdrawing } = useWithdraw();
 
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");

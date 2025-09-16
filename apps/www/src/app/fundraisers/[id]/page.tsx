@@ -5,13 +5,19 @@ import { Avatar } from "@/components/avatar";
 import { DonationCard } from "@/components/donations/card";
 import { FundraiserStatus } from "@/components/fundraisers/status";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useDonations, usePool, usePoolMembers, usePoolSummary } from "@/hooks/distributor";
+import {
+  useDonations,
+  usePool,
+  usePoolMembers,
+  usePoolSummary,
+} from "@/hooks/distributor";
 import { shortenAddress } from "@/lib/utils";
 import { PoolStatus } from "@/types/distributor";
 import { useCurrentUser, useIsInitialized } from "@coinbase/cdp-hooks";
@@ -40,7 +46,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { donations, isLoading: isLoadingDonations } = useDonations(
     id as string
   );
-  const { poolMembers, isLoading: isLoadingPoolMembers } = usePoolMembers(
+  const { members, isLoading: isLoadingPoolMembers } = usePoolMembers(
     id as string
   );
 
@@ -84,7 +90,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
       <div className="max-w-6xl mx-auto py-14 relative">
         <div className="absolute -top-[60px] left-0 -translate-y-1 rounded-md overflow-hidden border">
-          <Avatar src={pool?.imageUri ?? undefined} alt="Fundraiser" size={100} seed={pool?.creator} className="rounded-lg" />
+          <Avatar
+            src={pool?.imageUri ?? undefined}
+            alt="Fundraiser"
+            size={100}
+            seed={pool?.creator}
+            className="rounded-lg"
+          />
         </div>
 
         <div className="flex items-start justify-between">
@@ -97,7 +109,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button>Copy Collector Link</Button>
+            <CopyButton
+              text={`${window.location.origin}/fundraisers/${id}/donate`}
+              className="h-8 w-8"
+              copied={<span>Copied</span>}
+              fallback={<span>Copy Collector Link</span>}
+            />
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-9 w-9 rounded-full">
@@ -117,7 +135,16 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           </div>
           <div>
             <h1 className="font-bold">Members</h1>
-            <p>{poolMembers.map((member) => `${shortenAddress(member.member)} ${member.percentage / 100n}%`).join(" | ")}</p>
+            <p>
+              {members
+                .map(
+                  (member) =>
+                    `${shortenAddress(member.member)} ${
+                      member.percentage / 100n
+                    }%`
+                )
+                .join(" | ")}
+            </p>
           </div>
         </div>
 

@@ -115,7 +115,7 @@ contract Distributor is IDistributor {
     }
 
     /// @inheritdoc IDistributor
-    function joinPool(uint256 poolId, string calldata invitationCode) external {
+    function joinPool(uint256 poolId, bytes32 invitationCode) external {
         Pool storage pool = _pools[poolId];
         if (pool.id == 0) revert PoolNotFound(poolId);
         if (pool.status == PoolStatus.INACTIVE) revert PoolInactive(poolId);

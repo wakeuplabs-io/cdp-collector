@@ -1,15 +1,27 @@
 import { useCopyToClipboard } from "@/hooks/copy";
-import { cn } from "@/lib/utils";
-import { CheckIcon, CopyIcon } from "lucide-react";
-import { Button } from "./button";
+import { Button, ButtonProps } from "./button";
 
+export type CopyButtonProps = Omit<ButtonProps, "onClick"> & {
+  text: string;
+  copied: React.ReactNode;
+  fallback: React.ReactNode;
+};
 
-export const CopyButton = ({ text, className }: { text: string, className?: string }) => {
-  const { copyToClipboard, copied } = useCopyToClipboard();
+export const CopyButton: React.FC<CopyButtonProps> = ({
+  text,
+  className,
+  copied,
+  fallback,
+  ...props
+}) => {
+  const { copyToClipboard, copied: isCopied } = useCopyToClipboard();
 
   return (
-    <Button variant="ghost" size="icon" className={cn("h-8 w-8", className)} onClick={() => copyToClipboard(text)}>
-      {copied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
+    <Button
+      onClick={() => copyToClipboard(text)}
+      {...props}
+    >
+      {isCopied ? copied : fallback}
     </Button>
   );
 };

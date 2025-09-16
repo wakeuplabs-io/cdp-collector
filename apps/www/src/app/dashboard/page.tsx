@@ -96,7 +96,7 @@ export default function Dashboard() {
           </CreateFundraiser>
         </div>
 
-        {userPools.length > 0 ? (
+        {userPools?.length > 0 ? (
           <div className="grid grid-cols-3 gap-4 mt-10">
             {userPools.map((pool) => (
               <FundraiserCard key={pool.id} pool={pool} />

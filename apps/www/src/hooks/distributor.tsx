@@ -33,12 +33,12 @@ export const useCreatePool = () => {
         throw new Error("No smart account found");
       }
 
-      const { tx, members } = await distributorService.prepareCreatePool(pool);
+      const { calls, members } = await distributorService.prepareCreatePool(pool);
 
       const result = await sendUserOperation({
         evmSmartAccount: smartAccount,
         network: NETWORK,
-        calls: [tx],
+        calls,
         useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
       });
       const userOp = await bundlerClient.waitForUserOperationReceipt({
@@ -70,18 +70,16 @@ export const useJoinPool = () => {
       const smartAccount = currentUser?.evmSmartAccounts?.[0];
       if (!smartAccount) {
         throw new Error("No smart account found");
-
       }
 
       const result = await sendUserOperation({
         evmSmartAccount: smartAccount,
         network: NETWORK,
-        calls: [
-          await distributorService.prepareJoinPool(
-            BigInt(poolId),
-            invitationCode
-          )
-        ],
+        calls: await distributorService.prepareJoinPool(
+          BigInt(poolId),
+          invitationCode
+        ),
+
         useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
       });
 
@@ -169,6 +167,42 @@ export function useUserPools(): { userPools: Pool[]; isLoading: boolean } {
 
   return { userPools: data, isLoading };
 }
+
+export const useMakeDonation = () => {
+  const { currentUser } = useCurrentUser();
+  const { sendUserOperation } = useSendUserOperation();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const makeDonation = async (poolId: string, amount: string) => {
+    try {
+      setIsLoading(true);
+      const smartAccount = currentUser?.evmSmartAccounts?.[0];
+      if (!smartAccount) {
+        throw new Error("No smart account found");
+      }
+
+      const result = await sendUserOperation({
+        evmSmartAccount: smartAccount,
+        network: NETWORK,
+        calls: await distributorService.prepareDonate(
+          BigInt(poolId),
+          BigInt(amount)
+        ),
+        useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
+      });
+
+      await bundlerClient.waitForUserOperationReceipt({
+        hash: result.userOperationHash,
+      });
+
+      return { hash: result.userOperationHash };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { makeDonation, isLoading };
+};
 
 export const useDonations = (
   poolId: string

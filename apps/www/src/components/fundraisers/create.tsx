@@ -52,6 +52,7 @@ export const CreateFundraiser = ({
   const { evmAddress } = useEvmAddress();
   const [open, setOpen] = useState<boolean>(false);
   const [shared, setShared] = useState<boolean>(false);
+  const [invitedAllMembers, setInvitedAllMembers] = useState<boolean>(false);
   const [tab, setTab] = useState<"create" | "invite" | "success">("create");
   const [newMemberEmail, setNewMemberEmail] = useState<string>("");
   const [newMemberProportion, setNewMemberProportion] = useState<string>("");
@@ -323,7 +324,22 @@ export const CreateFundraiser = ({
                   </div>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 mx-6">
+                <Checkbox
+                  checked={invitedAllMembers}
+                  onCheckedChange={(checked) => setInvitedAllMembers(!!checked)}
+                />
+                <div className="grid gap-1.5 font-normal">
+                  <p className="text-sm leading-none font-medium">
+                    I have invited all members
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    You cannot add more members later.
+                  </p>
+                </div>
+              </Label>
+            )}
 
             <div className="flex justify-end gap-2 mt-6 border-t p-6">
               <Button
@@ -336,7 +352,10 @@ export const CreateFundraiser = ({
               >
                 Back
               </Button>
-              <Button onClick={onCreate} disabled={isCreatingPool}>
+              <Button
+                onClick={onCreate}
+                disabled={isCreatingPool || !invitedAllMembers}
+              >
                 {isCreatingPool ? "Creating..." : "Continue"}
               </Button>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { SUPPORTED_ASSETS } from "@/config";
+import { publicClient, SUPPORTED_ASSETS } from "@/config";
 import { useOnramp } from "@/hooks/onramp";
 import { useEvmAddress } from "@coinbase/cdp-hooks";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,8 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   }, [onramp, router, id]);
 
   const onDonateWithTransfer = useCallback(async () => {
-    router.push(`/fundraisers/${id}/donate/method/transfer`);
+    const latestBlock = await publicClient.getBlockNumber();
+    router.push(`/fundraisers/${id}/donate/method/transfer?startBlock=${latestBlock}`);
   }, []);
 
   return (

@@ -17,6 +17,7 @@ import {
   toBytes,
 } from "viem";
 import { distributorAbi } from "../abis/distributor";
+import { erc20Abi } from "../abis/erc20";
 
 type CreatePoolParams = {
   title: string;
@@ -29,14 +30,11 @@ type CreatePoolParams = {
 };
 
 export class DistributorService {
-  private readonly publicClient: PublicClient;
-
   constructor(
     private readonly distributorAddress: Address,
-    publicClient: PublicClient
-  ) {
-    this.publicClient = publicClient;
-  }
+    private readonly usdcAddress: Address,
+    private readonly publicClient: PublicClient
+  ) {}
 
   generateInvitation(): { code: `0x${string}`; hash: `0x${string}` } {
     const array = new Uint8Array(32);
@@ -57,7 +55,7 @@ export class DistributorService {
     image,
     members,
   }: CreatePoolParams): Promise<{
-    tx: TxParameters;
+    calls: TxParameters[];
     members: { code: string; id: string; proportion: number }[];
   }> {
     const invitations = members.map(() => {
@@ -70,21 +68,23 @@ export class DistributorService {
     const imageCfi = ""; // TODO: upload image to IPFS and get the CFI
 
     return {
-      tx: {
-        to: this.distributorAddress,
-        data: encodeFunctionData({
-          abi: distributorAbi,
-          functionName: "createPool",
-          args: [
-            title,
-            description,
-            imageCfi,
-            invitations.map((invitation) => invitation.hash),
-            percentages,
-          ],
-        }),
-        value: 0n,
-      },
+      calls: [
+        {
+          to: this.distributorAddress,
+          data: encodeFunctionData({
+            abi: distributorAbi,
+            functionName: "createPool",
+            args: [
+              title,
+              description,
+              imageCfi,
+              invitations.map((invitation) => invitation.hash),
+              percentages,
+            ],
+          }),
+          value: 0n,
+        },
+      ],
       members: members.map((member, index) => ({
         ...member,
         code: invitations[index].code,
@@ -113,25 +113,27 @@ export class DistributorService {
   async prepareJoinPool(
     poolId: bigint,
     invitationCode: string
-  ): Promise<TxParameters> {
+  ): Promise<TxParameters[]> {
     if (!invitationCode) {
       throw new Error("Invitation code is required");
     }
 
     // Convert string to bytes32 format if it's not already hex
-    const codeAsBytes32 = invitationCode.startsWith('0x') 
-      ? invitationCode as `0x${string}`
-      : `0x${invitationCode}` as `0x${string}`;
+    const codeAsBytes32 = invitationCode.startsWith("0x")
+      ? (invitationCode as `0x${string}`)
+      : (`0x${invitationCode}` as `0x${string}`);
 
-    return {
-      to: this.distributorAddress,
-      data: encodeFunctionData({
-        abi: distributorAbi,
-        functionName: "joinPool",
-        args: [poolId, codeAsBytes32],
-      }),
-      value: 0n,
-    };
+    return [
+      {
+        to: this.distributorAddress,
+        data: encodeFunctionData({
+          abi: distributorAbi,
+          functionName: "joinPool",
+          args: [poolId, codeAsBytes32],
+        }),
+        value: 0n,
+      },
+    ];
   }
 
   async getPoolSummary(poolId: bigint): Promise<PoolSummary> {
@@ -218,5 +220,28 @@ export class DistributorService {
       createdAt: new Date(Number(pool.createdAt)),
       status: pool.status as PoolStatus,
     };
+  }
+
+  async prepareDonate(poolId: bigint, amount: bigint): Promise<TxParameters[]> {
+    return [
+      {
+        to: this.usdcAddress,
+        data: encodeFunctionData({
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [this.distributorAddress, amount],
+        }),
+        value: 0n,
+      },
+      {
+        to: this.distributorAddress,
+        data: encodeFunctionData({
+          abi: distributorAbi,
+          functionName: "donate",
+          args: [poolId, amount],
+        }),
+        value: 0n,
+      },
+    ];
   }
 }

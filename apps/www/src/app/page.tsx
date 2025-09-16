@@ -1,5 +1,6 @@
 "use client";
 
+import { ParticlesBackground } from "@/components/particles";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@coinbase/cdp-hooks";
 import {
@@ -20,7 +21,7 @@ export default function Home() {
   const { currentUser } = useCurrentUser();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative">
       {/* Fork button */}
       <div className="absolute bottom-6 right-6">
         <Button size="sm" className="rounded-full " asChild>
@@ -70,7 +71,9 @@ export default function Home() {
         {/* Main heading */}
         <div className="space-y-6">
           <div>
-            <h1 className={`text-[4em] -mb-4 font-normal ${geistMono.className}`}>
+            <h1
+              className={`text-[4em] -mb-4 font-normal ${geistMono.className}`}
+            >
               Create fundraisers for
             </h1>
             <TypeAnimation
@@ -153,6 +156,8 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      <ParticlesBackground />
     </div>
   );
 }

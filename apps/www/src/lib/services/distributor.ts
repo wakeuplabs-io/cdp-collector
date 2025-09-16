@@ -18,6 +18,7 @@ import {
 } from "viem";
 import { distributorAbi } from "../abis/distributor";
 import { erc20Abi } from "../abis/erc20";
+import { IpfsClient } from "./ipfs";
 
 type CreatePoolParams = {
   title: string;
@@ -33,7 +34,8 @@ export class DistributorService {
   constructor(
     private readonly distributorAddress: Address,
     private readonly usdcAddress: Address,
-    private readonly publicClient: PublicClient
+    private readonly publicClient: PublicClient,
+    private readonly ipfsClient: IpfsClient
   ) {}
 
   generateInvitation(): { code: `0x${string}`; hash: `0x${string}` } {
@@ -52,8 +54,7 @@ export class DistributorService {
   async prepareCreatePool({
     title,
     description,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    image, 
+    image,
     members,
   }: CreatePoolParams): Promise<{
     calls: TxParameters[];
@@ -65,8 +66,7 @@ export class DistributorService {
     const percentages = members.map((member) =>
       BigInt(Math.floor(member.proportion * 100))
     );
-
-    const imageCfi = ""; // TODO: upload image to IPFS and get the CFI
+    const imageCfi = image ? await this.ipfsClient.uploadFile(image) : "";
 
     return {
       calls: [
@@ -131,6 +131,20 @@ export class DistributorService {
           abi: distributorAbi,
           functionName: "joinPool",
           args: [poolId, codeAsBytes32],
+        }),
+        value: 0n,
+      },
+    ];
+  }
+
+  async prepareDeactivatePool(poolId: bigint): Promise<TxParameters[]> {
+    return [
+      {
+        to: this.distributorAddress,
+        data: encodeFunctionData({
+          abi: distributorAbi,
+          functionName: "deactivatePool",
+          args: [poolId],
         }),
         value: 0n,
       },
@@ -205,6 +219,7 @@ export class DistributorService {
       ...pool,
       createdAt: new Date(Number(pool.createdAt)),
       status: pool.status as PoolStatus,
+      imageUri: pool.imageUri !== "" ? this.ipfsClient.buildGatewayUrl(pool.imageUri) : "",
     }));
   }
 
@@ -220,6 +235,7 @@ export class DistributorService {
       ...pool,
       createdAt: new Date(Number(pool.createdAt)),
       status: pool.status as PoolStatus,
+      imageUri: pool.imageUri !== "" ? this.ipfsClient.buildGatewayUrl(pool.imageUri) : "",
     };
   }
 

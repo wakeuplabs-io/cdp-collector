@@ -18,25 +18,25 @@ export default function Page({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = React.use(params);
-  const { pool, isLoading } = usePool(id);
-  const { evmAddress } = useEvmAddress();
-
   const router = useRouter();
+  const { id } = React.use(params);
+  const poolId = BigInt(id);
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
 
-  const [successTx, setSuccessTx] = useState<string | null>(null);
-
-  const { members } = usePoolMembers(id);
+  const { pool, isLoading } = usePool(poolId);
+  const { members } = usePoolMembers(poolId);
   const { joinPool, isLoading: isJoining } = useJoinPool();
+  const { evmAddress } = useEvmAddress();
+
+  const [successTx, setSuccessTx] = useState<string | null>(null);
 
   const onJoin = async () => {
     if (!code) {
       return;
     }
 
-    joinPool(id, code)
+    joinPool(poolId, code)
       .then(({ hash }) => {
         setSuccessTx(hash);
       })

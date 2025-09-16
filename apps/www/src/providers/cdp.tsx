@@ -2,7 +2,10 @@
 
 import { CDP_CREATE_ACCOUNT_TYPE, CDP_PROJECT_ID } from "@/config";
 import { type Config } from "@coinbase/cdp-hooks";
-import { CDPReactProvider, type AppConfig } from "@coinbase/cdp-react/components/CDPReactProvider";
+import {
+  CDPReactProvider,
+  type AppConfig,
+} from "@coinbase/cdp-react/components/CDPReactProvider";
 import { type Theme } from "@coinbase/cdp-react/theme";
 
 export const theme: Partial<Theme> = {
@@ -29,12 +32,12 @@ interface ProvidersProps {
 
 const CDP_CONFIG: Config = {
   projectId: CDP_PROJECT_ID,
-  createAccountOnLogin: CDP_CREATE_ACCOUNT_TYPE === "evm-smart" ? "evm-smart" : "evm-eoa",
+  createAccountOnLogin: CDP_CREATE_ACCOUNT_TYPE,
 };
 
 const APP_CONFIG: AppConfig = {
-  name: "BountyHub",
-  logoUrl: "http://localhost:3000/favicon.ico",
+  name: "FairShare",
+  logoUrl: "/favicon.ico",
   authMethods: ["email"],
 };
 

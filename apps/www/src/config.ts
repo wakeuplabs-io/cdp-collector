@@ -2,21 +2,26 @@ import { Address, createPublicClient, http } from "viem";
 import { createBundlerClient } from "viem/account-abstraction";
 import { DistributorService } from "./lib/services/distributor";
 import { Erc20Service } from "./lib/services/erc20";
+import { PinataIpfs } from "./lib/services/ipfs";
 import { Network } from "./types/network";
 import { Token } from "./types/token";
 
 // chain
+
 export const NETWORK = process.env.NEXT_PUBLIC_NETWORK as Network;
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL as string;
-export const EXPLORER_BASE_URL = process.env.NEXT_PUBLIC_EXPLORER_BASE_URL as string;
+export const EXPLORER_BASE_URL = process.env
+  .NEXT_PUBLIC_EXPLORER_BASE_URL as string;
 
 // contracts
+
 export const DISTRIBUTOR_ADDRESS = process.env
   .NEXT_PUBLIC_DISTRIBUTOR_ADDRESS as Address;
 export const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS as Address;
 export const MULTICALL_ADDRESS = "0xca11bde05977b3631167028862be2a173976ca11"; // for base and base-sepolia
 
 // coinbase
+
 export const CDP_CREATE_ACCOUNT_TYPE = process.env
   .NEXT_PUBLIC_CDP_CREATE_ACCOUNT_TYPE as "evm-smart" | "evm-eoa";
 export const CDP_PROJECT_ID = process.env.NEXT_PUBLIC_CDP_PROJECT_ID as string;
@@ -24,10 +29,15 @@ export const CDP_BASE_URL = "https://api.developer.coinbase.com";
 export const CDP_ONRAMP_BASE_URL = process.env
   .NEXT_PUBLIC_CDP_ONRAMP_BASE_URL as string;
 
+// ipfs
+
+export const PINATA_JWT = process.env.NEXT_PUBLIC_PINATA_JWT as string;
+export const PINATA_GATEWAY = process.env.NEXT_PUBLIC_PINATA_GATEWAY as string;
+
 // tokens
 
 export const SUPPORTED_ASSETS_BY_CHAIN: Record<Network, Token[]> = {
-  "base": [
+  base: [
     {
       decimals: 6,
       name: "USDC",
@@ -84,10 +94,16 @@ export const publicClient = createPublicClient({
 
 // services
 
+export const ipfsService = new PinataIpfs(
+  PINATA_JWT,
+  PINATA_GATEWAY
+);
+
 export const erc20Service = new Erc20Service(RPC_URL);
 
 export const distributorService = new DistributorService(
   DISTRIBUTOR_ADDRESS,
   USDC_ADDRESS,
-  publicClient
+  publicClient,
+  ipfsService
 );

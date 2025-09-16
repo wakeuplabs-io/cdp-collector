@@ -7,11 +7,11 @@ import {
   CurrencyDollarIcon,
   GlobeAltIcon,
 } from "@heroicons/react/24/outline";
-import { DM_Sans } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { TypeAnimation } from "react-type-animation";
 
-const dmSans = DM_Sans({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
 });
@@ -70,7 +70,7 @@ export default function Home() {
         {/* Main heading */}
         <div className="space-y-6">
           <div>
-            <h1 className={`text-[4em] -mb-4 font-normal ${dmSans.className}`}>
+            <h1 className={`text-[4em] -mb-4 font-normal ${geistMono.className}`}>
               Create fundraisers for
             </h1>
             <TypeAnimation
@@ -83,13 +83,13 @@ export default function Home() {
                 display: "block",
                 fontWeight: "700",
                 whiteSpace: "pre-line",
-                fontFamily: dmSans.style.fontFamily,
+                fontFamily: geistMono.style.fontFamily,
               }}
               repeat={Infinity}
             />
           </div>
           <p
-            className={`text-xl text-muted-foreground font-medium ${dmSans.className}`}
+            className={`text-xl text-muted-foreground font-medium ${geistMono.className}`}
           >
             Create Fundraiser. Get Donations. Help Causes.
           </p>

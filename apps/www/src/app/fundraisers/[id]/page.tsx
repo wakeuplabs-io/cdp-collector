@@ -3,6 +3,7 @@
 import { AccountManager } from "@/components/account-manager";
 import { Avatar } from "@/components/avatar";
 import { DonationCard } from "@/components/donations/card";
+import { DeactivateFundraiser } from "@/components/fundraisers/deactivate";
 import { FundraiserStatus } from "@/components/fundraisers/status";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy";
@@ -30,23 +31,23 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
   const router = useRouter();
+  const { id } = React.use(params);
+  const poolId = BigInt(id);
 
   const { currentUser } = useCurrentUser();
   const { isInitialized } = useIsInitialized();
 
-  const { pool, isLoading: isPoolLoading } = usePool(id as string);
-  const { poolSummary, isLoading: isLoadingPoolSummary } = usePoolSummary(
-    id as string
-  );
+  const { pool, isLoading: isPoolLoading } = usePool(poolId);
+  const { poolSummary, isLoading: isLoadingPoolSummary } =
+    usePoolSummary(poolId);
   const { donations } = useDonations();
-  const { members, isLoading: isLoadingPoolMembers } = usePoolMembers(
-    id as string
-  );
+  const { members, isLoading: isLoadingPoolMembers } = usePoolMembers(poolId);
+
+  const [openDeactivateDialog, setOpenDeactivateDialog] = useState(false);
 
   useEffect(() => {
     if (!currentUser && isInitialized) {
@@ -109,7 +110,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           <div className="flex items-center gap-2">
             <CopyButton
               text={`${window.location.origin}/fundraisers/${id}/donate`}
-              className="h-8 w-8"
               copied={<span>Copied</span>}
               fallback={<span>Copy Collector Link</span>}
             />
@@ -121,7 +121,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Deactivate</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpenDeactivateDialog(true)}>
+                  Deactivate
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -201,6 +203,12 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           </div>
         )}
       </div>
+
+      <DeactivateFundraiser
+        poolId={poolId}
+        open={openDeactivateDialog}
+        setOpen={setOpenDeactivateDialog}
+      />
     </div>
   );
 }

@@ -1,18 +1,34 @@
 import { PinataSDK } from "pinata";
 
 export interface IpfsClient {
+  uploadFile(file: File): Promise<string>;
+  downloadFile(cid: string): Promise<Blob>;
   uploadJSON(json: object): Promise<string>;
   downloadJSON(cid: string): Promise<object>;
+  buildGatewayUrl(cid: string): string;
 }
 
 export class PinataIpfs implements IpfsClient {
   private client: PinataSDK;
 
-  constructor(pinataJwt: string, pinataGateway: string) {
+  constructor(
+    private readonly pinataJwt: string,
+    private readonly pinataGateway: string
+  ) {
     this.client = new PinataSDK({
-      pinataJwt,
-      pinataGateway,
+      pinataJwt: this.pinataJwt,
+      pinataGateway: this.pinataGateway,
     });
+  }
+
+  async uploadFile(file: File): Promise<string> {
+    const result = await this.client.upload.public.file(file);
+    return result.cid;
+  }
+
+  async downloadFile(cid: string): Promise<Blob> {
+    const result = await this.client.gateways.public.get(cid);
+    return result.data as Blob;
   }
 
   async uploadJSON(json: object): Promise<string> {
@@ -27,5 +43,9 @@ export class PinataIpfs implements IpfsClient {
     }
 
     return result.data as object;
+  }
+
+  buildGatewayUrl(cid: string): string {
+    return `https://gateway.pinata.cloud/ipfs/${cid}`;
   }
 }

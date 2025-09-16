@@ -6,7 +6,7 @@ import {
   useSendUserOperation,
 } from "@coinbase/cdp-hooks";
 import { useState } from "react";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export const useCreatePool = () => {
   const { currentUser } = useCurrentUser();
@@ -64,7 +64,7 @@ export const useJoinPool = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const joinPool = async (
-    poolId: string,
+    poolId: bigint,
     invitationCode: string
   ): Promise<{ hash: string }> => {
     try {
@@ -98,6 +98,41 @@ export const useJoinPool = () => {
   return { joinPool, isLoading };
 };
 
+export const useDeactivatePool = () => {
+  const { currentUser } = useCurrentUser();
+  const { sendUserOperation } = useSendUserOperation();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const deactivatePool = async (poolId: bigint): Promise<{ hash: string }> => {
+    try {
+      setIsLoading(true);
+      const smartAccount = currentUser?.evmSmartAccounts?.[0];
+      if (!smartAccount) {
+        throw new Error("No smart account found");
+      }
+
+      // send user operation
+      const result = await sendUserOperation({
+        evmSmartAccount: smartAccount,
+        network: NETWORK,
+        calls: await distributorService.prepareDeactivatePool(poolId),
+      });
+      await bundlerClient.waitForUserOperationReceipt({
+        hash: result.userOperationHash,
+      });
+
+      // invalidate queries
+      await mutate(`/api/distributor/${poolId}`);
+
+      return { hash: result.userOperationHash };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { deactivatePool, isLoading };
+};
+
 export const useUserSummary = () => {
   const { evmAddress } = useEvmAddress();
 
@@ -125,7 +160,7 @@ export const useUserPoolsCount = () => {
 };
 
 export const usePool = (
-  poolId: string
+  poolId: bigint
 ): { pool: Pool | undefined; isLoading: boolean } => {
   const { data, isLoading } = useSWR(`/api/distributor/${poolId}`, {
     fetcher: () => distributorService.getPool(BigInt(poolId)),
@@ -134,7 +169,7 @@ export const usePool = (
   return { pool: data, isLoading };
 };
 
-export const usePoolSummary = (poolId: string) => {
+export const usePoolSummary = (poolId: bigint) => {
   const { data, isLoading } = useSWR(`/api/distributor/${poolId}/summary`, {
     fetcher: () => distributorService.getPoolSummary(BigInt(poolId)),
   });
@@ -142,7 +177,7 @@ export const usePoolSummary = (poolId: string) => {
   return { poolSummary: data, isLoading };
 };
 
-export function usePoolMembers(poolId: string): {
+export function usePoolMembers(poolId: bigint): {
   members: PoolMember[];
   isLoading: boolean;
 } {
@@ -160,7 +195,7 @@ export function useUserPools(): { userPools: Pool[]; isLoading: boolean } {
       if (!evmAddress) return [];
 
       return distributorService.getUserPools(
-        evmAddress as `0x${string}`,
+        evmAddress,
         0,
         100 // TODO: implement pagination
       );
@@ -175,7 +210,7 @@ export const useMakeDonation = () => {
   const { sendUserOperation } = useSendUserOperation();
   const [isLoading, setIsLoading] = useState(false);
 
-  const makeDonation = async (poolId: string, amount: string) => {
+  const makeDonation = async (poolId: bigint, amount: string) => {
     try {
       setIsLoading(true);
       const smartAccount = currentUser?.evmSmartAccounts?.[0];
@@ -206,8 +241,10 @@ export const useMakeDonation = () => {
   return { makeDonation, isLoading };
 };
 
-export const useDonations = (
-): { donations: Donation[] | undefined; isLoading: boolean } => {
+export const useDonations = (): {
+  donations: Donation[] | undefined;
+  isLoading: boolean;
+} => {
   // const { data, isLoading } = useSWR(`/api/distributor/${poolId}/donations`, {
   //   fetcher: () => distributorService.getDonations(BigInt(poolId)),
   // });

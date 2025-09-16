@@ -7,10 +7,10 @@ import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 
-// http://localhost:3000/fundraisers/3/donate/processing?txHash=0x4894b74dcd28b1d37ff62677919add03ba9a067b6eecaa8d7c228197c5156f29&amount=1&token=0x295E9B95C563F1ed0F10eD8dB24f2f58f043d959
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
   const router = useRouter();
+  const { id } = React.use(params);
+  const poolId = BigInt(id);
   const queryParameters = useSearchParams();
   const txHash = queryParameters.get("txHash");
   const amount = queryParameters.get("amount");
@@ -21,17 +21,17 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const token = SUPPORTED_ASSETS.find((t) => t.address === tokenAddress);
 
   useEffect(() => {
-    // TODO: check if we need to swap, otherwise donate directly
-    if (!token || !tokenAddress || !amount || !id) return;
-
+    if (!token || !tokenAddress || !amount || !poolId) return;
+    
+    // check if we need to swap, otherwise donate directly
     if (token.symbol !== "USDC") {
       // TODO: swap to USDC
     }
 
-    makeDonation(id, amount).then(({ hash }) => {
-      router.push(`/fundraisers/${id}/donate/success?txHash=${hash}`);
+    makeDonation(poolId, amount).then(({ hash }) => {
+      router.push(`/fundraisers/${poolId}/donate/success?txHash=${hash}`);
     }); 
-  }, [id, tokenAddress, amount, token, router, makeDonation]);
+  }, [poolId, tokenAddress, amount, token, router, makeDonation]);
 
 
   return (

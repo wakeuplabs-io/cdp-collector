@@ -50,6 +50,7 @@ export const CreateFundraiser = ({
 }) => {
   const router = useRouter();
   const { evmAddress } = useEvmAddress();
+
   const [open, setOpen] = useState<boolean>(false);
   const [shared, setShared] = useState<boolean>(false);
   const [invitedAllMembers, setInvitedAllMembers] = useState<boolean>(false);
@@ -74,6 +75,7 @@ export const CreateFundraiser = ({
   >([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [poolId, setPoolId] = useState<string | null>(null);
+  
   const { createPool, isLoading: isCreatingPool } = useCreatePool();
 
   function onSubmitMetadata() {
@@ -91,8 +93,10 @@ export const CreateFundraiser = ({
       email: newMemberEmail,
       proportion: newMemberProportion,
     });
-    // TODO: check members doesn't already include the email
-
+    if (members.some((member) => member.id === newMemberEmail)) {
+      setErrors(["Member already added"]);
+      return;
+    }
     if (!result.success) {
       setErrors(result.error.errors.map((e) => e.message));
       return;
@@ -111,7 +115,7 @@ export const CreateFundraiser = ({
     createPool({
       title: metadata.title,
       description: metadata.description,
-      image: undefined,
+      image: metadata.image ?? undefined,
       members,
     })
       .then(({ hash, poolId, members }) => {

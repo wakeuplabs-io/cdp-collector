@@ -3,10 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { openExplorerTx } from "@/lib/explorer";
 import { useRouter, useSearchParams } from "next/navigation";
-import React from "react";
 
-export default function Page({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
+export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

@@ -5,12 +5,14 @@ import { FundraiserCard } from "@/components/fundraisers/card";
 import { CreateFundraiser } from "@/components/fundraisers/create";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import { USDC } from "@/config";
 import { useUserPools, useUserSummary } from "@/hooks/distributor";
 import { useCurrentUser, useIsInitialized } from "@coinbase/cdp-hooks";
 import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { PiggyBankIcon, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { formatUnits } from "viem";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -30,10 +32,9 @@ export default function Dashboard() {
   const poolCount = userSummary?.poolCount ?? 0n;
   const totalDonationsAmount = userSummary?.totalDonationsAmount ?? 0n;
   const totalDonationsCount = userSummary?.totalDonationsCount ?? 0n;
-  const averageDonation =
-    totalDonationsCount === 0n
-      ? 0n
-      : totalDonationsAmount / totalDonationsCount;
+  const averageDonation = (
+    totalDonationsCount === 0n ? 0n : totalDonationsAmount / totalDonationsCount
+  ) as bigint;
 
   return (
     <div>
@@ -58,7 +59,9 @@ export default function Dashboard() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold">{totalDonationsAmount} USDC</p>
+            <p className="text-2xl font-bold">
+              {formatUnits(totalDonationsAmount, USDC.decimals)} USDC
+            </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donations
             </h2>
@@ -68,7 +71,9 @@ export default function Dashboard() {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
-            <p className="text-2xl font-bold">{averageDonation} USDC</p>
+            <p className="text-2xl font-bold">
+              {formatUnits(averageDonation, USDC.decimals)} USDC
+            </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation
             </h2>

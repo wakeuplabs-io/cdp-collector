@@ -18,7 +18,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     const latestBlock = await publicClient.getBlockNumber();
     
     await openOnramp();
-    router.push(`/fundraisers/${id}/donate/method/transfer?startBlock=${latestBlock}`);
+    router.push(`/fundraisers/${id}/donate/method/onramp?startBlock=${latestBlock}`);
   }, [openOnramp, router, id]);
 
   const onDonateWithTransfer = useCallback(async () => {

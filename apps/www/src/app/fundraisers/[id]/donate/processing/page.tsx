@@ -55,7 +55,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     <div className="py-10 px-6 min-h-[200px] flex flex-col gap-4 items-center justify-center text-center">
       <Loader2 className="w-10 h-10 animate-spin" />
       <span className="text-sm text-muted-foreground">
-        Processing transaction {shortenAddress(txHash ?? "")} for {amount}{" "}
+        Processing transaction {txHash ? shortenAddress(txHash) : ""} for {amount}{" "}
         {token?.symbol}.
         <br />
         Don&apos;t close this page...

@@ -14,7 +14,7 @@ export function useIncomingTransactions(
   walletAddress: Address,
   tokens: Token[],
   initialBlock: bigint,
-  onIncomingTx: (tx: IncomingTx) => void,
+  onIncomingTx: (tx: IncomingTx) => void
 ) {
   const lastPolledBlockRef = useRef<Record<string, bigint>>({});
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -26,26 +26,29 @@ export function useIncomingTransactions(
     const erc20Tokens = tokens.filter(
       (token) => token.address && token.address !== NATIVE_ADDRESS
     );
+    const native = tokens.find((token) => token.address === NATIVE_ADDRESS);
 
     const pollForTransfers = async () => {
       try {
         const currentBlock = await publicClient.getBlockNumber();
 
         // check native balance
-        const initialNativeBalance = await publicClient.getBalance({
-          address: walletAddress,
-          blockNumber: initialBlock,
-        });
-        const currentNativeBalance = await publicClient.getBalance({
-          address: walletAddress,
-          blockNumber: currentBlock,
-        });
-        if (currentNativeBalance > initialNativeBalance) {
-          onIncomingTx({
-            token: NATIVE_ADDRESS,
-            from: walletAddress,
-            amount: currentNativeBalance - initialNativeBalance,
+        if (native) {
+          const initialNativeBalance = await publicClient.getBalance({
+            address: walletAddress,
+            blockNumber: initialBlock,
           });
+          const currentNativeBalance = await publicClient.getBalance({
+            address: walletAddress,
+            blockNumber: currentBlock,
+          });
+          if (currentNativeBalance > initialNativeBalance) {
+            onIncomingTx({
+              token: NATIVE_ADDRESS,
+              from: walletAddress,
+              amount: currentNativeBalance - initialNativeBalance,
+            });
+          }
         }
 
         for (const token of erc20Tokens) {

@@ -23,7 +23,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       </div>
 
       <Button
-        onClick={() => router.push(`/fundraisers/${id}/create`)}
+        onClick={() => router.push(`/dashboard`)}
         className="w-full h-12"
         size="lg"
       >

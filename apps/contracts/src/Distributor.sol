@@ -171,7 +171,6 @@ contract Distributor is IDistributor {
         Member[] storage members = _poolMembers[poolId];
         for (uint256 i = 0; i < members.length; i++) {
             uint256 memberShare = (amount * members[i].percentage) / 10000;
-            // _balances[members[i].member] += memberShare;
             usdc.transfer(members[i].member, memberShare);
         }
 

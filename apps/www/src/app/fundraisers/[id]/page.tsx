@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { USDC } from "@/config";
 import {
   useDonations,
   usePool,
@@ -31,6 +32,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { formatUnits } from "viem";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -57,10 +59,10 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const totalDonationsAmount = poolSummary?.totalDonationsAmount ?? 0n;
   const totalDonationsCount = poolSummary?.totalDonationsCount ?? 0n;
   const uniqueDonatorsCount = poolSummary?.uniqueDonatorsCount ?? 0n;
-  const averageDonation =
+  const averageDonation =(
     totalDonationsCount === 0n
       ? 0n
-      : totalDonationsAmount / totalDonationsCount;
+      : totalDonationsAmount / totalDonationsCount) as bigint;
 
   if (isPoolLoading || isLoadingPoolSummary || isLoadingPoolMembers) {
     return (
@@ -154,9 +156,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold">{totalDonationsAmount} USDC</p>
+            <p className="text-2xl font-bold">{formatUnits(totalDonationsAmount, USDC.decimals)} USDC</p>
             <h2 className="text-sm text-muted-foreground font-medium">
-              Total Donations
+              Total Donations {totalDonationsAmount} {totalDonationsCount}
             </h2>
           </div>
 
@@ -164,7 +166,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
-            <p className="text-2xl font-bold">{averageDonation} USDC</p>
+            <p className="text-2xl font-bold">{formatUnits(averageDonation, USDC.decimals)} USDC</p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation
             </h2>

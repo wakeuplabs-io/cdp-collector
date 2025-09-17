@@ -18,7 +18,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   }, [evmAddress, id, router]);
 
   return (
-    <div className="p-6 border-t">
+    <div className="p-6">
       <Button className="w-full h-12" size="lg">
         Sign Up or Login to Donate
       </Button>

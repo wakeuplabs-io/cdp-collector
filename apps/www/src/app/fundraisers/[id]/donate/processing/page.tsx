@@ -4,10 +4,12 @@ import { SUPPORTED_ASSETS, USDC } from "@/config";
 import { useMakeDonation } from "@/hooks/distributor";
 import { useSwap } from "@/hooks/swap";
 import { shortenAddress } from "@/lib/utils";
+import { useCurrentUser } from "@coinbase/cdp-hooks";
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { formatUnits } from "viem";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -15,11 +17,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const poolId = BigInt(id);
   const queryParameters = useSearchParams();
   const txHash = queryParameters.get("txHash");
-  const amount = queryParameters.get("amount");
+  const amount = BigInt(queryParameters.get("amount") ?? "0");
   const tokenAddress = queryParameters.get("token");
+  const isExecuting = useRef(false);
 
   const { swap } = useSwap();
   const { makeDonation } = useMakeDonation();
+  const { currentUser } = useCurrentUser();
 
   const token = SUPPORTED_ASSETS.find((t) => t.address === tokenAddress);
 
@@ -33,7 +37,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           await swap({
             from: token,
             to: USDC,
-            amount: BigInt(amount),
+            amount,
           });
         }
 
@@ -48,15 +52,19 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       }
     }
 
-    swapAndDonate();
-  }, [poolId, tokenAddress, amount, token, router, makeDonation, swap]);
+    if (currentUser && !isExecuting.current) {
+      isExecuting.current = true;
+      swapAndDonate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
   return (
     <div className="py-10 px-6 min-h-[200px] flex flex-col gap-4 items-center justify-center text-center">
       <Loader2 className="w-10 h-10 animate-spin" />
       <span className="text-sm text-muted-foreground">
-        Processing transaction {txHash ? shortenAddress(txHash) : ""} for {amount}{" "}
-        {token?.symbol}.
+        Processing transaction {txHash ? shortenAddress(txHash) : ""} for{" "}
+        {formatUnits(amount, token?.decimals ?? 0)} {token?.symbol}.
         <br />
         Don&apos;t close this page...
       </span>

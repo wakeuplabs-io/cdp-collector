@@ -182,15 +182,12 @@ export function useUserPools(): { userPools: Pool[]; isLoading: boolean } {
 export const useMakeDonation = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const makeDonation = async (poolId: bigint, amount: string) => {
+  const makeDonation = async (poolId: bigint, amount: bigint) => {
     try {
       setIsLoading(true);
 
       const result = await CdpService.sendUserOperation({
-        calls: await distributorService.prepareDonate(
-          BigInt(poolId),
-          BigInt(amount)
-        ),
+        calls: await distributorService.prepareDonate(poolId, amount),
         useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
       });
 

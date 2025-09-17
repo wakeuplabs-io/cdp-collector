@@ -13,11 +13,7 @@ import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { keccak256, toBytes } from "viem";
 
-export default function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = React.use(params);
   const poolId = BigInt(id);
@@ -93,12 +89,10 @@ export default function Page({
 
         <div className="border-t p-6">
           {!evmAddress ? (
-            <div className="border-t p-6">
-              <AuthButton
-                className="flex items-center gap-2 rounded-md bg-primary h-[46px] shrink-0 text-sm font-normal [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:!px-4 [&_button]:!text-center [&_button]:!w-full"
-                id="account-manager"
-              />
-            </div>
+            <AuthButton
+              className="flex items-center gap-2 rounded-md bg-primary h-[46px] shrink-0 text-sm font-normal [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:!px-4 [&_button]:!text-center [&_button]:!w-full"
+              id="account-manager"
+            />
           ) : member && !successTx ? (
             <Button
               size="lg"

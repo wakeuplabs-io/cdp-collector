@@ -28,7 +28,7 @@ export const ShareCollectorLink: React.FC<{
           <DialogDescription>
             Share this link to collect donations. Users can make donations in{" "}
             {SUPPORTED_ASSETS.map((t) => t.symbol).join(", ")} or fiat but
-            you'll receive USDC each time. Funds will be automatically splitted
+            you&apos;ll receive USDC each time. Funds will be automatically splitted
             between all members.
           </DialogDescription>
         </DialogHeader>

@@ -6,7 +6,8 @@ import React from "react";
 
 export default function Page({ params, children }: { params: Promise<{ id: string }>, children: React.ReactNode }) {
   const { id } = React.use(params);
-  const { pool } = usePool(id);
+  const poolId = BigInt(id);
+  const { pool } = usePool(poolId);
 
   return (
     <div className="min-h-screen min-w-screen flex flex-col items-center justify-center bg-background">

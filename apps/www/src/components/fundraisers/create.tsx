@@ -7,6 +7,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useCreatePool } from "@/hooks/distributor";
+import { openExplorerTx } from "@/lib/explorer";
 import { useEvmAddress } from "@coinbase/cdp-hooks";
 import {
   CheckIcon,
@@ -75,7 +76,7 @@ export const CreateFundraiser = ({
   >([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [poolId, setPoolId] = useState<string | null>(null);
-  
+
   const { createPool, isLoading: isCreatingPool } = useCreatePool();
 
   function onSubmitMetadata() {
@@ -123,7 +124,11 @@ export const CreateFundraiser = ({
         setMembers(members);
         setTab("success");
         toast.success("Fundraiser created successfully", {
-          description: `Transaction hash: ${hash}`,
+          description: `Transaction hash ${hash}`,
+          action: {
+            label: "Explorer ↗",
+            onClick: () => openExplorerTx(hash),
+          },
         });
       })
       .catch((error) => {

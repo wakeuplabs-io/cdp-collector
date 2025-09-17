@@ -54,7 +54,7 @@ export function DeactivateFundraiser({
           <DialogTitle>Deactivate fundraiser</DialogTitle>
           <DialogDescription>
             Are you sure you want to deactivate this fundraiser? Once
-            deactivated, it cannot be reactivated and you won't be capable of
+            deactivated, it cannot be reactivated and you won&apos;t be capable of
             receiving donations.
           </DialogDescription>
         </DialogHeader>

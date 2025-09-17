@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       fromToken: from,
       fromAmount: amount,
       taker: taker,
-      signerAddress: signer, // Owner will sign permit2 messages
+      signerAddress: signer,
       slippageBps: 300, // 3% slippage tolerance
     });
 

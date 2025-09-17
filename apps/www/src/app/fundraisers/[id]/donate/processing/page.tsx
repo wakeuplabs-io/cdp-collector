@@ -1,15 +1,16 @@
 "use client";
 
-import { SUPPORTED_ASSETS, USDC } from "@/config";
+import { SUPPORTED_ASSETS, tokenService, USDC } from "@/config";
 import { useMakeDonation } from "@/hooks/distributor";
 import { useSwap } from "@/hooks/swap";
 import { shortenAddress } from "@/lib/utils";
+import { Token } from "@/types/token";
 import { useCurrentUser } from "@coinbase/cdp-hooks";
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { formatUnits } from "viem";
+import { Address, formatUnits } from "viem";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -28,20 +29,30 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const token = SUPPORTED_ASSETS.find((t) => t.address === tokenAddress);
 
   useEffect(() => {
-    async function swapAndDonate() {
-      if (!token || !tokenAddress || !amount || !poolId) return;
-
+    async function swapAndDonate(
+      evmAddress: Address,
+      poolId: bigint,
+      token: Token,
+      amount: bigint
+    ) {
       try {
         // check if we need to swap, otherwise donate directly
+        let donationAmount = amount;
+
         if (token.symbol !== "USDC") {
-          await swap({
-            from: token,
-            to: USDC,
-            amount,
-          });
+          const balanceBefore = await tokenService.getBalance(
+            USDC.address,
+            evmAddress
+          );
+          await swap({ from: token, to: USDC, amount });
+          const balanceAfter = await tokenService.getBalance(
+            USDC.address,
+            evmAddress
+          );
+          donationAmount = balanceAfter - balanceBefore;
         }
 
-        const { hash } = await makeDonation(poolId, amount);
+        const { hash } = await makeDonation(poolId, donationAmount);
         router.push(`/fundraisers/${poolId}/donate/success?txHash=${hash}`);
       } catch (error) {
         console.error(error);
@@ -52,9 +63,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       }
     }
 
-    if (currentUser && !isExecuting.current) {
+    if (currentUser && token && !isExecuting.current) {
       isExecuting.current = true;
-      swapAndDonate();
+      swapAndDonate(
+        currentUser?.evmSmartAccounts?.[0] as Address,
+        poolId,
+        token,
+        amount
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
@@ -71,3 +87,4 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     </div>
   );
 }
+

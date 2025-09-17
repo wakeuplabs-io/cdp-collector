@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { USDC } from "@/config";
 import { usePoolSummary } from "@/hooks/distributor";
-import { shortenAddress } from "@/lib/utils";
+import { formatUsdcBalance, shortenAddress } from "@/lib/utils";
 import { Pool, PoolStatus } from "@/types/distributor";
 import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatUnits } from "viem";
 import { ShareCollectorLink } from "../copy-collector-link";
 import { FundraiserStatus } from "./status";
 
@@ -25,10 +24,10 @@ export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
 
       <div className="bg-muted/50 rounded-xl p-4 mt-4 flex items-center justify-between">
         <span className="font-bold text-2xl">
-          ${formatUnits(poolSummary?.totalDonationsAmount ?? 0, USDC.decimals)}
+          ${formatUsdcBalance(poolSummary?.totalDonationsAmount ?? 0, USDC.decimals)}
         </span>
         <span className="text-muted-foreground border rounded-full bg-muted px-2 py-1 text-sm font-medium">
-          {formatUnits(poolSummary?.totalDonationsAmount ?? 0, USDC.decimals)} USDC
+          {formatUsdcBalance(poolSummary?.totalDonationsAmount ?? 0, USDC.decimals)} USDC
         </span>
       </div>
 

@@ -10,7 +10,7 @@ export function shortenAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export function formatBalance(
+export function formatUsdcBalance(
   balance: bigint,
   decimals: number
 ) {

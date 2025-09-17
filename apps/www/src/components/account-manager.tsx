@@ -11,7 +11,7 @@ import {
 import { USDC } from "@/config";
 import { useBalances, useWithdraw } from "@/hooks/balance";
 import { openExplorerTx } from "@/lib/explorer";
-import { formatBalance, shortenAddress } from "@/lib/utils";
+import { formatUsdcBalance, shortenAddress } from "@/lib/utils";
 import { TokenWithBalance } from "@/types/token";
 import { useEvmAddress, useSignOut } from "@coinbase/cdp-hooks";
 import { ArrowLeftIcon, ArrowUpIcon } from "lucide-react";
@@ -28,14 +28,14 @@ enum Tab {
 
 const Account: React.FC<{
   address: string;
-  tokenBalance?: TokenWithBalance;
+  usdcBalance?: bigint;
   setTab: (tab: Tab) => void;
-}> = ({ setTab, address, tokenBalance }) => {
+}> = ({ setTab, address, usdcBalance }) => {
   const { signOut } = useSignOut();
 
   return (
     <>
-      <Address address={address} tokenBalance={tokenBalance} className="mb-2" />
+      <Address address={address} usdcBalance={usdcBalance} className="mb-2" />
 
       <Button
         onClick={() => setTab(Tab.Withdraw)}
@@ -197,7 +197,7 @@ export const AccountManager = () => {
           <Account
             setTab={setTab}
             address={evmAddress}
-            tokenBalance={usdcBalance}
+            usdcBalance={usdcBalance?.balance}
           />
         ),
       },
@@ -227,7 +227,7 @@ export const AccountManager = () => {
           />
           <span className="text-sm">{shortenAddress(evmAddress ?? "")}</span>
           <span className="text-sm text-muted-foreground">
-            {formatBalance(usdcBalance?.balance ?? BigInt(0), USDC.decimals)}{" "}
+            {formatUsdcBalance(usdcBalance?.balance ?? BigInt(0), USDC.decimals)}{" "}
             USDC
           </span>
         </button>

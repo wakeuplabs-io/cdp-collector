@@ -1,3 +1,4 @@
+import { NATIVE_ADDRESS } from "@/config";
 import { erc20Abi } from "@/lib/abis/erc20";
 import { TxParameters } from "@/types/tx";
 import {
@@ -5,10 +6,11 @@ import {
   createPublicClient,
   encodeFunctionData,
   http,
+  maxUint256,
   PublicClient,
 } from "viem";
 
-export class Erc20Service {
+export class TokenService {
   private readonly publicClient: PublicClient;
 
   constructor(private readonly rpcUrl: string) {
@@ -18,6 +20,10 @@ export class Erc20Service {
   }
 
   async getBalance(token: Address, address: `0x${string}`): Promise<bigint> {
+    if (token === NATIVE_ADDRESS) {
+      return await this.publicClient.getBalance({ address });
+    }
+
     const balance = await this.publicClient.readContract({
       address: token,
       abi: erc20Abi,
@@ -28,7 +34,15 @@ export class Erc20Service {
     return BigInt(balance);
   }
 
-  async getAllowance(token: Address, owner: `0x${string}`, spender: `0x${string}`): Promise<bigint> {
+  async getAllowance(
+    token: Address,
+    owner: `0x${string}`,
+    spender: `0x${string}`
+  ): Promise<bigint> {
+    if (token === NATIVE_ADDRESS) {
+      return maxUint256;
+    }
+
     const allowance = await this.publicClient.readContract({
       address: token,
       abi: erc20Abi,
@@ -44,6 +58,10 @@ export class Erc20Service {
     token: Address,
     to: `0x${string}`
   ): Promise<TxParameters[]> {
+    if (token === NATIVE_ADDRESS) {
+      return [];
+    }
+
     return [
       {
         to: token,
@@ -62,30 +80,22 @@ export class Erc20Service {
     amount: bigint,
     to: `0x${string}`
   ): Promise<TxParameters[]> {
+    if (token === NATIVE_ADDRESS) {
+      return [
+        {
+          to,
+          value: amount,
+          data: "0x0",
+        },
+      ];
+    }
+
     return [
       {
         to: token,
         data: encodeFunctionData({
           abi: erc20Abi,
           functionName: "transfer",
-          args: [to, amount],
-        }),
-        value: 0n,
-      },
-    ];
-  }
-
-  async prepareMint(
-    token: Address,
-    amount: bigint,
-    to: `0x${string}`
-  ): Promise<TxParameters[]> {
-    return [
-      {
-        to: token,
-        data: encodeFunctionData({
-          abi: erc20Abi,
-          functionName: "mint",
           args: [to, amount],
         }),
         value: 0n,

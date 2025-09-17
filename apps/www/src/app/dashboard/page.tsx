@@ -7,12 +7,12 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { USDC } from "@/config";
 import { useUserPools, useUserSummary } from "@/hooks/distributor";
+import { formatUsdcBalance } from "@/lib/utils";
 import { useCurrentUser, useIsInitialized } from "@coinbase/cdp-hooks";
 import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { PiggyBankIcon, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { formatUnits } from "viem";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function Dashboard() {
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUnits(totalDonationsAmount, USDC.decimals)} USDC
+              {formatUsdcBalance(totalDonationsAmount, USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donations
@@ -72,7 +72,7 @@ export default function Dashboard() {
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUnits(averageDonation, USDC.decimals)} USDC
+              {formatUsdcBalance(averageDonation, USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation

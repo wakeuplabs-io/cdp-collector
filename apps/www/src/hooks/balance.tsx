@@ -1,9 +1,6 @@
 import {
-  bundlerClient,
-  erc20Service,
-  NATIVE_ADDRESS,
-  publicClient,
-  SUPPORTED_ASSETS,
+  bundlerClient, SUPPORTED_ASSETS,
+  tokenService
 } from "@/config";
 import { CdpService } from "@/lib/services/cdp";
 import { TokenWithBalance } from "@/types/token";
@@ -26,10 +23,7 @@ export const useBalances = (
       const balances = await Promise.all(
         SUPPORTED_ASSETS.map(async (token) => ({
           ...token,
-          balance:
-            token.address === NATIVE_ADDRESS
-              ? await publicClient.getBalance({ address })
-              : await erc20Service.getBalance(token.address, address),
+          balance: await tokenService.getBalance(token.address, address),
         }))
       );
 
@@ -57,10 +51,7 @@ export const useWithdraw = () => {
       setIsLoading(true);
 
       const result = await CdpService.sendUserOperation({
-        calls:
-          token === NATIVE_ADDRESS
-            ? [{ to, value: amount }]
-            : await erc20Service.prepareTransfer(token, amount, to),
+        calls: await tokenService.prepareTransfer(token, amount, to),
         useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
       });
 

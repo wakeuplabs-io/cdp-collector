@@ -1,9 +1,10 @@
 import {
   bundlerClient,
   CDP_ONRAMP_BASE_URL,
-  erc20Service,
   NATIVE_ADDRESS,
   NETWORK,
+  publicClient,
+  tokenService,
   TRADE_PERMIT2_ADDRESS,
 } from "@/config";
 import { Token } from "@/types/token";
@@ -71,20 +72,25 @@ export class CdpService {
     // check allowance
     if (from.address !== NATIVE_ADDRESS) {
       console.log("checking allowance");
-      const allowance = await erc20Service.getAllowance(
+      const allowance = await tokenService.getAllowance(
         from.address as Address,
         smartAccount,
         TRADE_PERMIT2_ADDRESS
       );
 
       if (allowance < amount) {
-        await CdpService.sendUserOperation({
-          calls: await erc20Service.prepareApprove(
+        console.log("Adding allowance")
+        const result = await CdpService.sendUserOperation({
+          calls: await tokenService.prepareApprove(
             amount,
             from.address as Address,
-            owner
+            TRADE_PERMIT2_ADDRESS
           ),
           useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
+        });
+
+        await publicClient.waitForTransactionReceipt({
+          hash: result.userOperationHash,
         });
       }
     }
@@ -96,20 +102,22 @@ export class CdpService {
     if (!res.ok) throw new Error("quote API failed");
     const swapResult = await res.json();
 
+    console.log("swapResult", swapResult);
+
     // Prepare the swap transaction data
     let txData = swapResult.transaction!.data as Hex;
 
     // If permit2 is needed, sign it with the owner
-    if (swapResult.permit2?.eip712) {
-      console.log("\nSigning Permit2 message...");
+    if (swapResult.permit2?.domain) {
+      console.log("\nSigning Permit2 message...", owner);
 
       const signature = await signEvmTypedData({
         evmAccount: owner,
         typedData: {
-          domain: swapResult.permit2.eip712.domain,
-          types: swapResult.permit2.eip712.types,
-          primaryType: swapResult.permit2.eip712.primaryType,
-          message: swapResult.permit2.eip712.message,
+          domain: swapResult.permit2.domain,
+          types: swapResult.permit2.types,
+          primaryType: swapResult.permit2.primaryType,
+          message: swapResult.permit2.message,
         },
       });
 
@@ -121,6 +129,8 @@ export class CdpService {
 
       // Append the signature length and signature to the transaction data
       txData = concat([txData, signatureLengthInHex, signature.signature]);
+
+      console.log("signedMessage", signature, signatureLengthInHex)
     }
 
     // Submit the swap as a user operation
@@ -151,3 +161,8 @@ export class CdpService {
     return { hash: userOpHash.userOperationHash };
   }
 }
+
+
+// http://localhost:3000/fundraisers/1/donate/processing?amount=100000000000000&token=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+
+// http://localhost:3000/fundraisers/1/donate/processing?amount=100000&token=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913

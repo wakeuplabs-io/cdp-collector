@@ -20,7 +20,7 @@ import {
   usePoolMembers,
   usePoolSummary,
 } from "@/hooks/distributor";
-import { shortenAddress } from "@/lib/utils";
+import { formatUsdcBalance, shortenAddress } from "@/lib/utils";
 import { PoolStatus } from "@/types/distributor";
 import { useCurrentUser, useIsInitialized } from "@coinbase/cdp-hooks";
 import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
@@ -33,7 +33,6 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { formatUnits } from "viem";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -157,7 +156,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUnits(totalDonationsAmount, USDC.decimals)} USDC
+              {formatUsdcBalance(totalDonationsAmount, USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donations 
@@ -169,7 +168,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUnits(averageDonation, USDC.decimals)} USDC
+              {formatUsdcBalance(averageDonation, USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation

@@ -20,7 +20,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   useIncomingTransactions(evmAddress!, SUPPORTED_ASSETS, BigInt(startBlock ?? 0), (tx) => {
     // Received transaction, let's make donation
-    router.push(`/fundraisers/${id}/donate/processing?txHash=${tx.txHash}&amount=${tx.amount}&token=${tx.token}`);
+    router.push(`/fundraisers/${id}/donate/processing?amount=${tx.amount}&token=${tx.token}` + (tx.txHash ? `&txHash=${tx.txHash}` : ""));
   });
 
   if (!isInitialized) {
@@ -35,7 +35,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
       <p className="text-center text-sm mb-10">
         Deposit {SUPPORTED_ASSETS.map((asset) => asset.symbol).join(", ").replace(/, ([^,]*)$/, " or $1")} to this address in{" "}
-        <span className="font-bold">Base Mainnet</span>
+        <span className="font-bold">Base Mainnet</span>. Collector will receive USDC each time.
       </p>
 
       <div className="text-center text-sm mb-10 text-muted-foreground animate-pulse">

@@ -1,17 +1,13 @@
-import { bundlerClient, distributorService, NETWORK } from "@/config";
+import { bundlerClient, distributorService } from "@/config";
+import { CdpService } from "@/lib/services/cdp";
 import { Donation, Pool, PoolMember } from "@/types/distributor";
-import {
-  useCurrentUser,
-  useEvmAddress,
-  useSendUserOperation,
-} from "@coinbase/cdp-hooks";
+import { useEvmAddress } from "@coinbase/cdp-hooks";
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 
 export const useCreatePool = () => {
-  const { currentUser } = useCurrentUser();
-  const { sendUserOperation } = useSendUserOperation();
   const [isLoading, setIsLoading] = useState(false);
+  const { evmAddress } = useEvmAddress();
 
   const createPool = async (pool: {
     title: string;
@@ -28,18 +24,11 @@ export const useCreatePool = () => {
   }> => {
     try {
       setIsLoading(true);
-      const smartAccount = currentUser?.evmSmartAccounts?.[0];
-      if (!smartAccount) {
-        throw new Error("No smart account found");
-      }
 
       const { calls, members } = await distributorService.prepareCreatePool(
         pool
       );
-
-      const result = await sendUserOperation({
-        evmSmartAccount: smartAccount,
-        network: NETWORK,
+      const result = await CdpService.sendUserOperation({
         calls,
         useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
       });
@@ -48,6 +37,8 @@ export const useCreatePool = () => {
       });
 
       const poolId = await distributorService.recoverPoolId(userOp.logs);
+
+      await mutate(`/api/distributor/${evmAddress}`);
 
       return { poolId, hash: result.userOperationHash, members };
     } finally {
@@ -59,8 +50,6 @@ export const useCreatePool = () => {
 };
 
 export const useJoinPool = () => {
-  const { currentUser } = useCurrentUser();
-  const { sendUserOperation } = useSendUserOperation();
   const [isLoading, setIsLoading] = useState(false);
 
   const joinPool = async (
@@ -69,19 +58,12 @@ export const useJoinPool = () => {
   ): Promise<{ hash: string }> => {
     try {
       setIsLoading(true);
-      const smartAccount = currentUser?.evmSmartAccounts?.[0];
-      if (!smartAccount) {
-        throw new Error("No smart account found");
-      }
 
-      const result = await sendUserOperation({
-        evmSmartAccount: smartAccount,
-        network: NETWORK,
+      const result = await CdpService.sendUserOperation({
         calls: await distributorService.prepareJoinPool(
           BigInt(poolId),
           invitationCode
         ),
-
         useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
       });
 
@@ -99,22 +81,14 @@ export const useJoinPool = () => {
 };
 
 export const useDeactivatePool = () => {
-  const { currentUser } = useCurrentUser();
-  const { sendUserOperation } = useSendUserOperation();
   const [isLoading, setIsLoading] = useState(false);
 
   const deactivatePool = async (poolId: bigint): Promise<{ hash: string }> => {
     try {
       setIsLoading(true);
-      const smartAccount = currentUser?.evmSmartAccounts?.[0];
-      if (!smartAccount) {
-        throw new Error("No smart account found");
-      }
 
       // send user operation
-      const result = await sendUserOperation({
-        evmSmartAccount: smartAccount,
-        network: NETWORK,
+      const result = await CdpService.sendUserOperation({
         calls: await distributorService.prepareDeactivatePool(poolId),
       });
       await bundlerClient.waitForUserOperationReceipt({
@@ -206,21 +180,13 @@ export function useUserPools(): { userPools: Pool[]; isLoading: boolean } {
 }
 
 export const useMakeDonation = () => {
-  const { currentUser } = useCurrentUser();
-  const { sendUserOperation } = useSendUserOperation();
   const [isLoading, setIsLoading] = useState(false);
 
   const makeDonation = async (poolId: bigint, amount: string) => {
     try {
       setIsLoading(true);
-      const smartAccount = currentUser?.evmSmartAccounts?.[0];
-      if (!smartAccount) {
-        throw new Error("No smart account found");
-      }
 
-      const result = await sendUserOperation({
-        evmSmartAccount: smartAccount,
-        network: NETWORK,
+      const result = await CdpService.sendUserOperation({
         calls: await distributorService.prepareDonate(
           BigInt(poolId),
           BigInt(amount)

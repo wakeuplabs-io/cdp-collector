@@ -13,10 +13,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const queryParameters = useSearchParams();
   const startBlock = queryParameters.get("startBlock");
 
-  useIncomingTransactions(evmAddress!, SUPPORTED_ASSETS, (tx) => {
+
+  useIncomingTransactions(evmAddress!, SUPPORTED_ASSETS, BigInt(startBlock ?? 0), (tx) => {
     // Received transaction, let's make donation
     router.push(`/fundraisers/${id}/donate/processing?txHash=${tx.txHash}&amount=${tx.amount}&token=${tx.token}`);
-  }, startBlock ? BigInt(startBlock) : undefined); // Optional: start polling from this block
+  }); 
 
   return (
     <div className="text-center text-sm p-6 text-muted-foreground animate-pulse">

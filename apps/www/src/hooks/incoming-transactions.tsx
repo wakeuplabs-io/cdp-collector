@@ -1,58 +1,68 @@
-import { publicClient } from "@/config";
+import { NATIVE_ADDRESS, publicClient } from "@/config";
 import { Token } from "@/types/token";
 import { useEffect, useRef } from "react";
 import { type Address, parseAbiItem } from "viem";
 
-
 type IncomingTx = {
   token: Address;
   from: Address;
-  amount: string;
-  txHash: `0x${string}`;
+  amount: bigint;
+  txHash?: `0x${string}`;
 };
 
 export function useIncomingTransactions(
   walletAddress: Address,
   tokens: Token[],
+  initialBlock: bigint,
   onIncomingTx: (tx: IncomingTx) => void,
-  initialBlock?: bigint
 ) {
   const lastPolledBlockRef = useRef<Record<string, bigint>>({});
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!walletAddress || tokens.length === 0) return;
+    if (!walletAddress || tokens.length === 0 || initialBlock === 0n) return;
 
-    // Filter out ETH (0x000...000) as it doesn't emit Transfer events
-    const erc20Tokens = tokens.filter(token => 
-      token.address && token.address !== "0x0000000000000000000000000000000000000000"
+    // Filter out native as it doesn't emit Transfer events
+    const erc20Tokens = tokens.filter(
+      (token) => token.address && token.address !== NATIVE_ADDRESS
     );
-
-    console.log("Setting up polling for transfers", { 
-      walletAddress, 
-      tokenCount: erc20Tokens.length,
-      tokens: erc20Tokens.map(t => `${t.symbol}:${t.address}`)
-    });
 
     const pollForTransfers = async () => {
       try {
         const currentBlock = await publicClient.getBlockNumber();
 
+        // check native balance
+        const initialNativeBalance = await publicClient.getBalance({
+          address: walletAddress,
+          blockNumber: initialBlock,
+        });
+        const currentNativeBalance = await publicClient.getBalance({
+          address: walletAddress,
+          blockNumber: currentBlock,
+        });
+        if (currentNativeBalance > initialNativeBalance) {
+          onIncomingTx({
+            token: NATIVE_ADDRESS,
+            from: walletAddress,
+            amount: currentNativeBalance - initialNativeBalance,
+          });
+        }
+
         for (const token of erc20Tokens) {
           const tokenKey = token.address;
-          
+
           // Use initialBlock or default to 100 blocks ago on first run
-          const lastPolledBlock = lastPolledBlockRef.current[tokenKey] ?? 
-            (initialBlock ?? (currentBlock - 100n));
-          
+          const lastPolledBlock =
+            lastPolledBlockRef.current[tokenKey] ?? initialBlock;
+
           // Only poll if there are new blocks
           if (lastPolledBlock >= currentBlock) continue;
 
-          console.log(`Polling ${token.symbol} from block ${lastPolledBlock + 1n} to ${currentBlock}`);
-
           const logs = await publicClient.getLogs({
             address: token.address,
-            event: parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)"),
+            event: parseAbiItem(
+              "event Transfer(address indexed from, address indexed to, uint256 value)"
+            ),
             args: {
               to: walletAddress,
             },
@@ -61,23 +71,12 @@ export function useIncomingTransactions(
           });
 
           if (logs.length > 0) {
-            console.log(`Found ${logs.length} incoming ${token.symbol} transfers`);
-            
             logs.forEach((log) => {
-              const amount = Number(log.args.value) / 10 ** (token.decimals ?? 18);
-              console.log("Incoming transfer detected!", {
-                token: token.symbol,
-                amount,
-                from: log.args.from,
-                txHash: log.transactionHash,
-                blockNumber: log.blockNumber
-              });
-
               onIncomingTx({
                 token: token.address,
                 from: log.args.from!,
-                amount: amount.toString(),
-                txHash: log.transactionHash!
+                amount: log.args.value!,
+                txHash: log.transactionHash!,
               });
             });
           }

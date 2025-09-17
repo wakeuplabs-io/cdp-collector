@@ -12,6 +12,8 @@ export const NETWORK = process.env.NEXT_PUBLIC_NETWORK as Network;
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL as string;
 export const EXPLORER_BASE_URL = process.env
   .NEXT_PUBLIC_EXPLORER_BASE_URL as string;
+export const TRADE_PERMIT2_ADDRESS =
+  "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 
 // contracts
 
@@ -36,13 +38,14 @@ export const PINATA_GATEWAY = process.env.NEXT_PUBLIC_PINATA_GATEWAY as string;
 
 // tokens
 
+export const NATIVE_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 export const SUPPORTED_ASSETS_BY_CHAIN: Record<Network, Token[]> = {
   base: [
     {
       decimals: 6,
       name: "USDC",
       symbol: "USDC",
-      address: "0x295E9B95C563F1ed0F10eD8dB24f2f58f043d959", // Mock USDC
+      address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       iconUrl:
         "https://dynamic-assets.coinbase.com/3c15df5e2ac7d4abbe9499ed9335041f00c620f28e8de2f93474a9f432058742cdf4674bd43f309e69778a26969372310135be97eb183d91c492154176d455b8/asset_icons/9d67b728b6c8f457717154b3a35f9ddc702eae7e76c4684ee39302c4d7fd0bb8.png",
     },
@@ -58,7 +61,15 @@ export const SUPPORTED_ASSETS_BY_CHAIN: Record<Network, Token[]> = {
       decimals: 18,
       name: "Ethereum",
       symbol: "ETH",
-      address: "0x0000000000000000000000000000000000000000",
+      address: NATIVE_ADDRESS,
+      iconUrl:
+        "https://dynamic-assets.coinbase.com/dbb4b4983bde81309ddab83eb598358eb44375b930b94687ebe38bc22e52c3b2125258ffb8477a5ef22e33d6bd72e32a506c391caa13af64c00e46613c3e5806/asset_icons/4113b082d21cc5fab17fc8f2d19fb996165bcce635e6900f7fc2d57c4ef33ae9.png",
+    },
+    {
+      decimals: 18,
+      name: "Wrapped Ethereum",
+      symbol: "WETH",
+      address: "0x4200000000000000000000000000000000000006",
       iconUrl:
         "https://dynamic-assets.coinbase.com/dbb4b4983bde81309ddab83eb598358eb44375b930b94687ebe38bc22e52c3b2125258ffb8477a5ef22e33d6bd72e32a506c391caa13af64c00e46613c3e5806/asset_icons/4113b082d21cc5fab17fc8f2d19fb996165bcce635e6900f7fc2d57c4ef33ae9.png",
     },
@@ -94,10 +105,7 @@ export const publicClient = createPublicClient({
 
 // services
 
-export const ipfsService = new PinataIpfs(
-  PINATA_JWT,
-  PINATA_GATEWAY
-);
+export const ipfsService = new PinataIpfs(PINATA_JWT, PINATA_GATEWAY);
 
 export const erc20Service = new Erc20Service(RPC_URL);
 

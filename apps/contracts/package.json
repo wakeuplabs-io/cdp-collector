@@ -6,6 +6,8 @@
   "scripts": {
     "test": "hardhat test",
     "compile": "hardhat compile",
+    "deploy:base": "hardhat ignition deploy ignition/modules/Distributor.ts --network base-mainnet --verify",
+    "wipe:base": "hardhat ignition wipe chain-84532 DistributorModule#Distributor",
     "deploy:base-sepolia": "hardhat ignition deploy ignition/modules/Distributor.ts --network base-sepolia --verify",
     "wipe:base-sepolia": "hardhat ignition wipe chain-84532 DistributorModule#Distributor"
   },

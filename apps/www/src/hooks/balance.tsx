@@ -1,21 +1,38 @@
-import { bundlerClient, erc20Service, NETWORK, SUPPORTED_ASSETS } from "@/config";
+import {
+  bundlerClient,
+  erc20Service,
+  NATIVE_ADDRESS,
+  publicClient,
+  SUPPORTED_ASSETS,
+} from "@/config";
+import { CdpService } from "@/lib/services/cdp";
 import { TokenWithBalance } from "@/types/token";
-import { useCurrentUser, useSendUserOperation } from "@coinbase/cdp-hooks";
+import { useCurrentUser } from "@coinbase/cdp-hooks";
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { Address } from "viem";
 
-export const useBalances = (address?: Address): { balances: TokenWithBalance[], isLoading: boolean } => {
-  const emptyBalances = useMemo(() => SUPPORTED_ASSETS.map(token => ({ ...token, balance: BigInt(0) })), []);
+export const useBalances = (
+  address?: Address
+): { balances: TokenWithBalance[]; isLoading: boolean } => {
+  const emptyBalances = useMemo(
+    () => SUPPORTED_ASSETS.map((token) => ({ ...token, balance: BigInt(0) })),
+    []
+  );
 
   const { data, isLoading } = useSWR(`/api/balance/${address}`, {
     fetcher: async () => {
       if (!address) return emptyBalances;
 
-      const balances = await Promise.all(SUPPORTED_ASSETS.map(async (token) => ({
-        ...token,
-        balance: await erc20Service.getBalance(token.address, address)
-      })));
+      const balances = await Promise.all(
+        SUPPORTED_ASSETS.map(async (token) => ({
+          ...token,
+          balance:
+            token.address === NATIVE_ADDRESS
+              ? await publicClient.getBalance({ address })
+              : await erc20Service.getBalance(token.address, address),
+        }))
+      );
 
       return balances;
     },
@@ -27,25 +44,25 @@ export const useBalances = (address?: Address): { balances: TokenWithBalance[], 
 
 export const useWithdraw = () => {
   const { currentUser } = useCurrentUser();
-  const { sendUserOperation } = useSendUserOperation();
   const [isLoading, setIsLoading] = useState(false);
 
-  const withdraw = async ({token, amount, to}: {
+  const withdraw = async ({
+    token,
+    amount,
+    to,
+  }: {
     token: Address;
     amount: bigint;
     to: Address;
   }): Promise<{ hash: string }> => {
     try {
       setIsLoading(true);
-      const smartAccount = currentUser?.evmSmartAccounts?.[0];
-      if (!smartAccount) {
-        throw new Error("No smart account found");
-      }
 
-      const result = await sendUserOperation({
-        evmSmartAccount: smartAccount,
-        network: NETWORK,
-        calls: await erc20Service.prepareTransfer(token, amount, to),
+      const result = await CdpService.sendUserOperation({
+        calls:
+          token === NATIVE_ADDRESS
+            ? [{ to, value: amount }]
+            : await erc20Service.prepareTransfer(token, amount, to),
         useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
       });
 

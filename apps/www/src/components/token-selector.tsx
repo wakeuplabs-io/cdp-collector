@@ -1,25 +1,26 @@
 "use client";
 
-import { cn, formatBalance } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { TokenWithBalance } from "@/types/token";
 import { Check, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { formatUnits } from "viem";
 
 export const CryptoTokenSelector: React.FC<{
   tokens: TokenWithBalance[];
-  value: TokenWithBalance;
   onChange: (token: TokenWithBalance) => void;
   className?: string;
-}> = ({ className, tokens, value, onChange }) => {
-  const [selectedToken, setSelectedToken] = useState<TokenWithBalance>(value);
+}> = ({ className, tokens, onChange }) => {
+  const [selectedToken, setSelectedToken] = useState<TokenWithBalance>(
+    tokens[0]
+  );
   const [isOpen, setIsOpen] = useState(false);
 
   const handleTokenSelect = (token: TokenWithBalance) => {
     onChange(token);
     setSelectedToken(token);
     setIsOpen(false);
-
   };
 
   return (
@@ -50,7 +51,7 @@ export const CryptoTokenSelector: React.FC<{
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Balance</p>
             <p className="font-medium text-sm text-foreground">
-              {formatBalance(selectedToken.balance, selectedToken.decimals)}
+              {formatUnits(selectedToken.balance, selectedToken.decimals)}
             </p>
           </div>
           <ChevronDown
@@ -93,7 +94,7 @@ export const CryptoTokenSelector: React.FC<{
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Balance</p>
                   <p className="font-medium text-foreground">
-                    {formatBalance(token.balance, token.decimals)}
+                    {formatUnits(token.balance, token.decimals)}
                   </p>
                 </div>
                 {selectedToken.address === token.address && (

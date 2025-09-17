@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      'base-mainnet': configByNetwork["base-sepolia"].blockscoutApiKey,
+      'base-mainnet': configByNetwork["base-mainnet"].blockscoutApiKey,
       'base-sepolia': configByNetwork["base-sepolia"].blockscoutApiKey,
     },
     customChains: [

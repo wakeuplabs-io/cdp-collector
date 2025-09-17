@@ -37,7 +37,7 @@ const CDP_CONFIG: Config = {
 
 const APP_CONFIG: AppConfig = {
   name: "FairShare",
-  logoUrl: "/favicon.ico",
+  logoUrl: `${process.env.NEXT_PUBLIC_URL}/favicon.ico`,
   authMethods: ["email"],
 };
 

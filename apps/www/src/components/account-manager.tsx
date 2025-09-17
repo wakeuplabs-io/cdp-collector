@@ -4,11 +4,9 @@ import { Address } from "@/components/address";
 import { CryptoTokenSelector } from "@/components/token-selector";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
+  Dialog, DialogContent,
   DialogDescription,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { USDC } from "@/config";
 import { useBalances, useWithdraw } from "@/hooks/balance";
@@ -16,7 +14,7 @@ import { openExplorerTx } from "@/lib/explorer";
 import { formatBalance, shortenAddress } from "@/lib/utils";
 import { TokenWithBalance } from "@/types/token";
 import { useEvmAddress, useSignOut } from "@coinbase/cdp-hooks";
-import { ArrowLeftIcon, ArrowUpIcon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowUpIcon } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tooltip } from "react-tooltip";
@@ -119,7 +117,6 @@ const Withdraw: React.FC<{ setTab: (tab: Tab) => void }> = ({ setTab }) => {
       <CryptoTokenSelector
         className="mb-2"
         tokens={balances}
-        value={token}
         onChange={setToken}
       />
 
@@ -247,11 +244,6 @@ export const AccountManager = () => {
                 <ArrowLeftIcon />
               </button>
             ) : null}
-
-            <DialogClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 rounded-full bg-muted h-4 w-4 flex items-center justify-center">
-              <XIcon />
-              <span className="sr-only">Close</span>
-            </DialogClose>
           </div>
 
           <DialogTitle className="text-center font-medium text-base mb-6">

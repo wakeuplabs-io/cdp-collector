@@ -28,6 +28,17 @@ export class Erc20Service {
     return BigInt(balance);
   }
 
+  async getAllowance(token: Address, owner: `0x${string}`, spender: `0x${string}`): Promise<bigint> {
+    const allowance = await this.publicClient.readContract({
+      address: token,
+      abi: erc20Abi,
+      functionName: "allowance",
+      args: [owner, spender],
+    });
+
+    return BigInt(allowance);
+  }
+
   async prepareApprove(
     amount: bigint,
     token: Address,

@@ -7,7 +7,6 @@ import {
 } from "@/config";
 import { CdpService } from "@/lib/services/cdp";
 import { TokenWithBalance } from "@/types/token";
-import { useCurrentUser } from "@coinbase/cdp-hooks";
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { Address } from "viem";
@@ -43,7 +42,6 @@ export const useBalances = (
 };
 
 export const useWithdraw = () => {
-  const { currentUser } = useCurrentUser();
   const [isLoading, setIsLoading] = useState(false);
 
   const withdraw = async ({

@@ -19,12 +19,8 @@ export async function POST(request: NextRequest) {
     const keySecret = process.env.CDP_API_SECRET;
 
     if (!keyName || !keySecret) {
-      return NextResponse.json(
-        {
-          error:
-            "Missing CDP API credentials. Please set CDP_API_KEY and CDP_API_SECRET environment variables.",
-        },
-        { status: 500 }
+      throw new Error(
+        "Missing CDP API credentials. Please set CDP_API_KEY and CDP_API_SECRET environment variables."
       );
     }
 

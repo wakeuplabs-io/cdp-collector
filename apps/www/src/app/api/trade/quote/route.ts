@@ -3,13 +3,20 @@ import { CdpClient } from "@coinbase/cdp-sdk";
 import { NextResponse } from "next/server";
 import { Address } from "viem";
 
-const cdp = new CdpClient({
-  apiKeyId: process.env.CDP_API_KEY,
-  apiKeySecret: process.env.CDP_API_SECRET,
-});
-
 export async function GET(request: Request) {
   try {
+    // Get API credentials from environment variables
+    const apiKeyId = process.env.CDP_API_KEY;
+    const apiKeySecret = process.env.CDP_API_SECRET;
+    if (!apiKeyId || !apiKeySecret) {
+      throw new Error(
+        "Missing CDP API credentials. Please set CDP_API_KEY and CDP_API_SECRET environment variables."
+      );
+    }
+
+    const cdp = new CdpClient({ apiKeyId, apiKeySecret });
+
+    // Parse request 
     const { searchParams } = new URL(request.url);
     const from = searchParams.get("from") as Address;
     const to = searchParams.get("to") as Address;
@@ -17,10 +24,12 @@ export async function GET(request: Request) {
     const taker = searchParams.get("taker") as Address;
     const signer = searchParams.get("signer") as Address;
 
+    // Trade only available in mainnet
     if (NETWORK === "base-sepolia") {
       throw new Error("Swap is not supported on base-sepolia");
     }
 
+    // Create swap quote
     const swapResult = await cdp.evm.createSwapQuote({
       network: NETWORK,
       toToken: to,

@@ -44,6 +44,7 @@ export class CdpService {
         assets: assets,
       }),
     });
+    if (!res.ok) throw new Error("quote API failed");
     const { token } = await res.json();
 
     return (
@@ -89,10 +90,11 @@ export class CdpService {
     }
 
     // Create the swap quote using CDP API
-    const swapResultResponse = await fetch(
+    const res = await fetch(
       `/api/trade/quote?from=${from.address}&to=${to.address}&amount=${amount}&taker=${smartAccount}&signer=${owner}`
     );
-    const swapResult = await swapResultResponse.json();
+    if (!res.ok) throw new Error("quote API failed");
+    const swapResult = await res.json();
 
     // Prepare the swap transaction data
     let txData = swapResult.transaction!.data as Hex;
@@ -122,13 +124,13 @@ export class CdpService {
     }
 
     // Submit the swap as a user operation
-    console.log(     {
+    console.log({
       to: swapResult.transaction!.to as Address,
       value: swapResult.transaction!.value
         ? BigInt(swapResult.transaction!.value)
         : BigInt(0),
       data: txData,
-    },)
+    });
     const userOpHash = await CdpService.sendUserOperation({
       calls: [
         {

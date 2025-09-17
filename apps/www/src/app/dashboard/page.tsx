@@ -85,18 +85,18 @@ export default function Dashboard() {
             </div>
             <p className="text-2xl font-bold">{poolCount}</p>
             <h2 className="text-sm text-muted-foreground font-medium">
-              Total Collector Links
+              Active Collector Links
             </h2>
           </div>
         </div>
 
         <div className="mt-10 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Fundraisers</h1>
+          <h1 className="text-2xl font-bold">Collector Links</h1>
 
           <CreateFundraiser>
             <Button>
               <PlusIcon className="w-5 h-5" />
-              Create Fundraiser
+              Create Collector Link
             </Button>
           </CreateFundraiser>
         </div>
@@ -113,9 +113,9 @@ export default function Dashboard() {
               <PiggyBankIcon className="w-4 h-4" />
             </div>
 
-            <h2 className="text-xl font-bold">No fundraisers yet</h2>
+            <h2 className="text-xl font-bold">No Collector Links yet</h2>
             <p className="text-muted-foreground text-sm">
-              Your fundraisers will appear here <br /> once you create one.
+              Your Collector Links will appear here <br /> once you create one.
             </p>
           </div>
         )}

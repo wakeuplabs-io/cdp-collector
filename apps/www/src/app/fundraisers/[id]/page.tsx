@@ -27,7 +27,8 @@ import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import {
   DollarSign,
   EllipsisVerticalIcon,
-  MoveLeftIcon, UsersIcon
+  MoveLeftIcon,
+  UsersIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,10 +60,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const totalDonationsAmount = poolSummary?.totalDonationsAmount ?? 0n;
   const totalDonationsCount = poolSummary?.totalDonationsCount ?? 0n;
   const uniqueDonatorsCount = poolSummary?.uniqueDonatorsCount ?? 0n;
-  const averageDonation =(
-    totalDonationsCount === 0n
-      ? 0n
-      : totalDonationsAmount / totalDonationsCount) as bigint;
+  const averageDonation = (
+    totalDonationsCount === 0n ? 0n : totalDonationsAmount / totalDonationsCount
+  ) as bigint;
 
   if (isPoolLoading || isLoadingPoolSummary || isLoadingPoolMembers) {
     return (
@@ -112,14 +112,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <ShareCollectorLink
               link={`${window.location.origin}/fundraisers/${id}/donate`}
             >
-              <Button>
+              <Button disabled={pool?.status !== PoolStatus.ACTIVE}>
                 Share Collector Link
               </Button>
             </ShareCollectorLink>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-9 w-9 rounded-full">
+                <Button disabled={pool?.status !== PoolStatus.ACTIVE} variant="outline" className="h-9 w-9 rounded-full">
                   <EllipsisVerticalIcon className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -156,9 +156,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold">{formatUnits(totalDonationsAmount, USDC.decimals)} USDC</p>
+            <p className="text-2xl font-bold">
+              {formatUnits(totalDonationsAmount, USDC.decimals)} USDC
+            </p>
             <h2 className="text-sm text-muted-foreground font-medium">
-              Total Donations {totalDonationsAmount} {totalDonationsCount}
+              Total Donations 
             </h2>
           </div>
 
@@ -166,7 +168,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="p-4 bg-background rounded-xl w-min mb-2">
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
-            <p className="text-2xl font-bold">{formatUnits(averageDonation, USDC.decimals)} USDC</p>
+            <p className="text-2xl font-bold">
+              {formatUnits(averageDonation, USDC.decimals)} USDC
+            </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation
             </h2>

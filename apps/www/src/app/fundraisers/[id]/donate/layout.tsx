@@ -2,12 +2,35 @@
 
 import { Avatar } from "@/components/avatar";
 import { usePool } from "@/hooks/distributor";
+import { PoolStatus } from "@/types/distributor";
 import React from "react";
 
-export default function Page({ params, children }: { params: Promise<{ id: string }>, children: React.ReactNode }) {
+export default function Page({
+  params,
+  children,
+}: {
+  params: Promise<{ id: string }>;
+  children: React.ReactNode;
+}) {
   const { id } = React.use(params);
   const poolId = BigInt(id);
-  const { pool } = usePool(poolId);
+  const { pool, isLoading } = usePool(poolId);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen min-w-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!pool) {
+    return (
+      <div className="min-h-screen min-w-screen flex items-center justify-center">
+        Collector link not found.
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen min-w-screen flex flex-col items-center justify-center bg-background">
@@ -30,7 +53,15 @@ export default function Page({ params, children }: { params: Promise<{ id: strin
         </div>
 
         <div className="border-t">
-          {children}
+          {pool?.status !== PoolStatus.ACTIVE ? (
+            <div className="p-6">
+              <p className="text-muted-foreground text-center">
+                This collector link is not active.
+              </p>
+            </div>
+          ) : (
+            children
+          )}
         </div>
       </div>
       <div className="text-muted-foreground text-center mt-4 font-medium text-sm">

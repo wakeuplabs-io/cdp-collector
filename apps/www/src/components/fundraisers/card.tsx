@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { USDC } from "@/config";
 import { usePoolSummary } from "@/hooks/distributor";
 import { shortenAddress } from "@/lib/utils";
-import { Pool } from "@/types/distributor";
+import { Pool, PoolStatus } from "@/types/distributor";
 import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatUnits } from "viem";
@@ -50,7 +50,7 @@ export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
         <ShareCollectorLink
           link={`${window.location.origin}/fundraisers/${pool.id}/donate`}
         >
-          <Button size="lg" variant="outline" className="flex-1">
+          <Button size="lg" variant="outline" className="flex-1" disabled={pool.status !== PoolStatus.ACTIVE}>
             Share Collector Link
           </Button>
         </ShareCollectorLink>

@@ -245,18 +245,23 @@ contract Distributor is IDistributor {
     function getUserSummary(
         address user
     ) external view returns (UserSummary memory summary) {
+        uint256 poolCount = 0;
         for (uint256 i = 0; i < _userPools[user].length; i++) {
             summary.totalDonationsAmount += _poolSummaries[_userPools[user][i]]
                 .totalDonationsAmount;
             summary.totalDonationsCount += _poolSummaries[_userPools[user][i]]
                 .totalDonationsCount;
+
+            if (_pools[_userPools[user][i]].status == PoolStatus.ACTIVE) {
+                poolCount++;
+            }
         }
 
         return
             UserSummary({
                 totalDonationsAmount: summary.totalDonationsAmount,
                 totalDonationsCount: summary.totalDonationsCount,
-                poolCount: _userPools[user].length
+                poolCount: poolCount
             });
     }
 

@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,13 +38,13 @@ export const ShareCollectorLink: React.FC<{
               Link
             </Label>
             <div className="relative">
-              <Input id="link" defaultValue={link} readOnly className="h-10 " />
+              <Input id="link" defaultValue={link} readOnly className="h-10 rounded-lg" />
               <CopyButton
                 text={link}
                 copied={<CheckIcon className="w-5 h-5" />}
                 fallback={<CopyIcon className="w-5 h-5" />}
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                variant="ghost"
+                variant="outline"
               />
             </div>
           </div>

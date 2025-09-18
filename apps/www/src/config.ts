@@ -36,6 +36,11 @@ export const CDP_ONRAMP_BASE_URL = process.env
 export const PINATA_JWT = process.env.NEXT_PUBLIC_PINATA_JWT as string;
 export const PINATA_GATEWAY = process.env.NEXT_PUBLIC_PINATA_GATEWAY as string;
 
+// subgraph
+
+export const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL as string;
+export const SUBGRAPH_API_KEY = process.env.NEXT_PUBLIC_SUBGRAPH_API_KEY as string;
+
 // tokens
 
 export const NATIVE_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";

@@ -24,6 +24,7 @@
     "@tsparticles/react": "3.0.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "graphql-request": "7.2.0",
     "lucide-react": "0.543.0",
     "minimatch": "10.0.3",
     "next": "15.5.2",

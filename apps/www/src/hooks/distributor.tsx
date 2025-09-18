@@ -1,7 +1,8 @@
-import { bundlerClient, distributorService } from "@/config";
+import { bundlerClient, distributorService, SUBGRAPH_API_KEY, SUBGRAPH_URL } from "@/config";
 import { CdpService } from "@/lib/services/cdp";
 import { Donation, Pool, PoolMember } from "@/types/distributor";
 import { useEvmAddress } from "@coinbase/cdp-hooks";
+import { gql, request } from "graphql-request";
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 
@@ -204,13 +205,48 @@ export const useMakeDonation = () => {
   return { makeDonation, isLoading };
 };
 
-export const useDonations = (): {
+export const useDonations = (
+  poolId: bigint
+): {
   donations: Donation[] | undefined;
   isLoading: boolean;
 } => {
-  // const { data, isLoading } = useSWR(`/api/distributor/${poolId}/donations`, {
-  //   fetcher: () => distributorService.getDonations(BigInt(poolId)),
-  // });
+  const { data, isLoading } = useSWR(`/api/distributor/${poolId}/donations`, {
+    fetcher: async () => {
+      // TODO: implement pagination
+      const query = gql`{
+        donationMades(first: 100, where: { poolId: ${poolId} }) {
+          id
+          poolId
+          donor
+          amount
+          blockTimestamp
+          transactionHash
+        }
+      }`;
+      const res = await request<{
+        donationMades: {
+          id: string;
+          poolId: string;
+          donor: string;
+          amount: string;
+          blockTimestamp: string;
+          transactionHash: string;
+        }[];
+      }>(SUBGRAPH_URL, query, {}, { Authorization: `Bearer ${SUBGRAPH_API_KEY}` });
 
-  return { donations: [], isLoading: false };
+      return res.donationMades.map((donation) => ({
+        id: BigInt(donation.id),
+        poolId: BigInt(donation.poolId),
+        donor: donation.donor,
+        amount: BigInt(donation.amount),
+        transactionHash: donation.transactionHash,
+        createdAt: new Date(Number(donation.blockTimestamp) * 1000),
+      }));
+    },
+  });
+
+  return { donations: data, isLoading };
 };
+
+// 6505326e83d4c9852c2b65ed66a0bf83

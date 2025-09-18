@@ -45,7 +45,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { pool, isLoading: isPoolLoading } = usePool(poolId);
   const { poolSummary, isLoading: isLoadingPoolSummary } =
     usePoolSummary(poolId);
-  const { donations } = useDonations();
+  const { donations } = useDonations(poolId);
   const { members, isLoading: isLoadingPoolMembers } = usePoolMembers(poolId);
 
   const [openDeactivateDialog, setOpenDeactivateDialog] = useState(false);

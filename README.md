@@ -35,22 +35,26 @@ A decentralized fundraising platform built on Base that enables creators to set 
 ```
 cdp-collector/
 ├── apps/
-│   ├── contracts/          # Smart contracts (Hardhat)
+│   ├── contracts/         
 │   │   ├── src/
 │   │   │   ├── Distributor.sol
 │   │   │   └── interfaces/
 │   │   ├── test/
-│   │   └── ignition/       # Deployment scripts
-│   └── www/               # Next.js frontend
+│   │   └── ignition/       
+│   └── www/               
 │       ├── src/
-│       │   ├── app/       # App router pages
+│       │   ├── app/       
 │       │   ├── components/
-│       │   ├── hooks/     # Custom React hooks
-│       │   ├── lib/       # Utilities and services
-│       │   └── types/     # TypeScript definitions
+│       │   ├── hooks/     
+│       │   ├── lib/ 
+|       |   |    └── services
+|       |   |         ├── cdp.ts
+|       |   |         ├── distributor.ts
+|       |   |         └── token.ts
+│       │   └── types/     
 ├── subgraphs/
-│   ├── distributor-base/      # Base mainnet subgraph
-│   └── distributor-base-sepolia/  # Base Sepolia testnet subgraph
+│   ├── distributor-base/      
+│   └── distributor-base-sepolia/  
 └── package.json
 ```
 
@@ -59,14 +63,14 @@ cdp-collector/
 ### Prerequisites
 
 - Node.js 18+ 
-- pnpm (recommended package manager)
+- pnpm 
 - Git
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/wakeuplabs-io/cdp-escrow.git
+   git clone https://github.com/wakeuplabs-io/cdp-collector.git
    cd cdp-collector
    ```
 
@@ -77,7 +81,7 @@ cdp-collector/
 
 3. **Set up environment variables**
    
-   Create `.env.local` files in both `apps/www/` and `apps/contracts/`:
+   Create `.env.local` files in both `apps/www/` and `apps/contracts/` (only if you're planning on re deploying):
 
    **apps/www/.env.local:**
    ```env
@@ -174,14 +178,12 @@ pnpm build
 ```
 
 **Deploy subgraph:**
-```bash
-pnpm deploy
-```
+Create project from [thegraph.com](https://thegraph.com) and follow instructions from there.
 
 ## 🎯 How It Works
 
 ### 1. Creating a Fundraiser
-- Users connect their wallet using Coinbase Developer Platform
+- Users signs up using Coinbase Developer Platform Embedded wallets
 - Create a new fundraiser with title, description, and image
 - Set up invitation codes and percentage allocations for beneficiaries
 - Fundraiser starts in "PENDING" status until all invited members join
@@ -192,8 +194,8 @@ pnpm deploy
 - Once all members join, the fundraiser becomes "ACTIVE"
 
 ### 3. Making Donations
-- Donors can contribute using ETH, USDC, or other supported tokens
-- All donations are automatically converted to USDC
+- Donors can contribute using ETH, USDC, or other supported tokens as well as Fiat through the Onramp Api
+- All donations are automatically converted to USDC using the Trade Api
 - Funds are immediately distributed to all members based on their percentages
 - All transactions are recorded on-chain for transparency
 
@@ -253,6 +255,26 @@ The core `Distributor` contract manages fundraising pools with the following key
 - **Invitation System**: Secure access control using hash-based invitation codes
 - **Percentage-based Allocation**: Flexible percentage distribution among members
 - **USDC Settlement**: All donations are settled in USDC for consistency
+
+## CDP Integration Points
+
+1. **Authentication**: Email/SMS login creates embedded wallets automatically. We took leverage of ui provided by coinbase to get this running in no time. The related code can be found between [AccountManager](apps/www/src/components/account-manager.tsx) and the [CdpProvider](apps/www/src/providers/cdp.tsx)
+2. **Gas Sponsorship**: Sponsor transaction fees for users using Coinbase Smart Wallets. You can see how to send transactions with sponsored gas in any hook at `hooks` that sends transactions like for [distributor](apps/www/src/lib/services/distributor.ts) or allong trades in [cdp.ts](apps/www/src/lib/services/cdp.ts)
+3. **Onramp Integration**: Enable users to make donations directly with fiat currency. Generating an onramp url consists in creating a session token and opening the corresponding url. You can see how to do the former [here](apps/www/src/app/api/session/route.ts) and the latter [here](apps/www/src/hooks/onramp.tsx)
+4. **Trade Api**: We automatically swap received tokens [here](apps/www/src/app/fundraisers/[id]/donate/processing/page.tsx) and the trading logic is concentrated [here](apps/www/src/lib/services/cdp.ts)
+5. **Token Balances**: We use Coinbase Token balances api to retrieve available tokens for user in a blast [here](apps/www/src/app/api/balances/[address]/route.ts)
+
+
+## 🛠️ Development & Extension
+
+This project serves as a foundation for building CDP-powered applications. Key areas for extension:
+
+- **Custom Token Standards**: Implement NFT rewards or custom token mechanics
+- **Advanced Voting**: Add community voting for submission evaluation
+- **Cross-Chain**: Extend to other CDP-supported networks
+- **Enhanced Profiles**: Add reputation systems and achievement badges
+- **Integration APIs**: Connect with GitHub, portfolio sites, or other developer tools
+
 
 ## 🤝 Contributing
 

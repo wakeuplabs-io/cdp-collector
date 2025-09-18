@@ -1,0 +1,50 @@
+type DonationMade @entity(immutable: true) {
+  id: Bytes!
+  poolId: BigInt! # uint256
+  donor: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FundsWithdrawn @entity(immutable: true) {
+  id: Bytes!
+  member: Bytes! # address
+  recipient: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type MemberJoined @entity(immutable: true) {
+  id: Bytes!
+  poolId: BigInt! # uint256
+  member: Bytes! # address
+  percentage: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PoolCreated @entity(immutable: true) {
+  id: Bytes!
+  poolId: BigInt! # uint256
+  creator: Bytes! # address
+  title: String! # string
+  description: String! # string
+  imageUri: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PoolDeactivated @entity(immutable: true) {
+  id: Bytes!
+  poolId: BigInt! # uint256
+  deactivatedBy: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

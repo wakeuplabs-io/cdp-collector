@@ -1,0 +1,447 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "name": "_usdcAddress", "type": "address", "internalType": "address" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  { "name": "ArrayLengthMismatch", "type": "error", "inputs": [] },
+  { "name": "EmptyTitle", "type": "error", "inputs": [] },
+  {
+    "name": "InsufficientBalance",
+    "type": "error",
+    "inputs": [
+      { "name": "requested", "type": "uint256", "internalType": "uint256" },
+      { "name": "available", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  { "name": "InvalidCreatorPercentage", "type": "error", "inputs": [] },
+  { "name": "InvalidDonationAmount", "type": "error", "inputs": [] },
+  { "name": "InvalidInvitationCode", "type": "error", "inputs": [] },
+  {
+    "name": "InvalidMemberPercentage",
+    "type": "error",
+    "inputs": [
+      { "name": "percentage", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "name": "InvalidTotalPercentage",
+    "type": "error",
+    "inputs": [
+      {
+        "name": "totalPercentage",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  { "name": "InvalidWithdrawalAmount", "type": "error", "inputs": [] },
+  { "name": "MemberAlreadyInPool", "type": "error", "inputs": [] },
+  { "name": "NoInvitationCodeForSlot", "type": "error", "inputs": [] },
+  {
+    "name": "NotPoolCreator",
+    "type": "error",
+    "inputs": [
+      { "name": "caller", "type": "address", "internalType": "address" },
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "name": "NotPoolMember",
+    "type": "error",
+    "inputs": [
+      { "name": "caller", "type": "address", "internalType": "address" },
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "name": "PoolInactive",
+    "type": "error",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "name": "PoolNotFound",
+    "type": "error",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "name": "PoolPending",
+    "type": "error",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  { "name": "SlotAlreadyFilled", "type": "error", "inputs": [] },
+  { "name": "TransferFailed", "type": "error", "inputs": [] },
+  {
+    "name": "DonationMade",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "poolId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "donor",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "FundsWithdrawn",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "member",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "recipient",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "MemberJoined",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "poolId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "member",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "percentage",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "PoolCreated",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "poolId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "imageUri",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "PoolDeactivated",
+    "type": "event",
+    "inputs": [
+      {
+        "name": "poolId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "deactivatedBy",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "name": "createPool",
+    "type": "function",
+    "inputs": [
+      { "name": "title", "type": "string", "internalType": "string" },
+      { "name": "description", "type": "string", "internalType": "string" },
+      { "name": "imageUri", "type": "string", "internalType": "string" },
+      {
+        "name": "invitationCodes",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "percentages",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "deactivatePool",
+    "type": "function",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "donate",
+    "type": "function",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" },
+      { "name": "amount", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "getPool",
+    "type": "function",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "pool",
+        "type": "tuple",
+        "components": [
+          { "name": "id", "type": "uint256", "internalType": "uint256" },
+          { "name": "creator", "type": "address", "internalType": "address" },
+          { "name": "title", "type": "string", "internalType": "string" },
+          { "name": "description", "type": "string", "internalType": "string" },
+          { "name": "imageUri", "type": "string", "internalType": "string" },
+          { "name": "createdAt", "type": "uint256", "internalType": "uint256" },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "enum IDistributorStructs.PoolStatus"
+          }
+        ],
+        "internalType": "struct IDistributorStructs.Pool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getPoolMembers",
+    "type": "function",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" },
+      { "name": "offset", "type": "uint256", "internalType": "uint256" },
+      { "name": "limit", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "members",
+        "type": "tuple[]",
+        "components": [
+          { "name": "member", "type": "address", "internalType": "address" },
+          {
+            "name": "invitationCodeHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          { "name": "percentage", "type": "uint256", "internalType": "uint256" }
+        ],
+        "internalType": "struct IDistributorStructs.Member[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getPoolMembersCount",
+    "type": "function",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "total", "type": "uint256", "internalType": "uint256" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getPoolSummary",
+    "type": "function",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "summary",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "totalDonationsAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "totalDonationsCount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "uniqueDonatorsCount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "internalType": "struct IDistributorStructs.PoolSummary"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getUserPools",
+    "type": "function",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "offset", "type": "uint256", "internalType": "uint256" },
+      { "name": "limit", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "pools",
+        "type": "tuple[]",
+        "components": [
+          { "name": "id", "type": "uint256", "internalType": "uint256" },
+          { "name": "creator", "type": "address", "internalType": "address" },
+          { "name": "title", "type": "string", "internalType": "string" },
+          { "name": "description", "type": "string", "internalType": "string" },
+          { "name": "imageUri", "type": "string", "internalType": "string" },
+          { "name": "createdAt", "type": "uint256", "internalType": "uint256" },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "enum IDistributorStructs.PoolStatus"
+          }
+        ],
+        "internalType": "struct IDistributorStructs.Pool[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getUserPoolsCount",
+    "type": "function",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      { "name": "total", "type": "uint256", "internalType": "uint256" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getUserSummary",
+    "type": "function",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      {
+        "name": "summary",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "totalDonationsAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "totalDonationsCount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "poolCount", "type": "uint256", "internalType": "uint256" }
+        ],
+        "internalType": "struct IDistributorStructs.UserSummary"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "joinPool",
+    "type": "function",
+    "inputs": [
+      { "name": "poolId", "type": "uint256", "internalType": "uint256" },
+      { "name": "invitationCode", "type": "bytes32", "internalType": "bytes32" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "nextPoolId",
+    "type": "function",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "name": "usdc",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "address", "internalType": "contract IERC20" }
+    ],
+    "stateMutability": "view"
+  }
+]

@@ -176,7 +176,8 @@ export const AccountManager = () => {
   }, [evmAddress]);
 
   const usdcBalance = useMemo(
-    () => balances.find((balance) => balance.address === USDC.address),
+    () => {
+      return balances.find((balance) => balance.address.toLowerCase() === USDC.address.toLowerCase())},
     [balances]
   );
 

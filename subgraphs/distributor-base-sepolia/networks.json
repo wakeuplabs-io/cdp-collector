@@ -1,8 +1,8 @@
 {
   "base-sepolia": {
     "Distributor": {
-      "address": "0xb3245EDb6D2554093E949E5f400490fF26A228Fa",
-      "startBlock": 31179687
+      "address": "0xCB08d4f099a222dB7c7a806fd11608d064079f4c",
+      "startBlock": 31229451
     }
   }
 }

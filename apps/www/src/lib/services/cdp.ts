@@ -161,8 +161,3 @@ export class CdpService {
     return { hash: userOpHash.userOperationHash };
   }
 }
-
-
-// http://localhost:3000/fundraisers/1/donate/processing?amount=100000000000000&token=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-
-// http://localhost:3000/fundraisers/1/donate/processing?amount=100000&token=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913

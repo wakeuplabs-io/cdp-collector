@@ -14,9 +14,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const startBlock = queryParameters.get("startBlock");
 
 
-  useIncomingTransactions(evmAddress!, SUPPORTED_ASSETS, BigInt(startBlock ?? 0), (tx) => {
+  useIncomingTransactions(evmAddress!, Object.values(SUPPORTED_ASSETS), BigInt(startBlock ?? 0), (tx) => {
     // Received transaction, let's make donation
-    router.push(`/fundraisers/${id}/donate/processing?txHash=${tx.txHash}&amount=${tx.amount}&token=${tx.token}`);
+    router.push(`/fundraisers/${id}/donate/processing?amount=${tx.amount.toString()}&token=${tx.token}` + (tx.txHash ? `&txHash=${tx.txHash}` : ""));
   }); 
 
   return (

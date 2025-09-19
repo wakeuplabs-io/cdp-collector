@@ -8,9 +8,9 @@ dataSources:
     name: Distributor
     network: base-sepolia
     source:
-      address: "0xb3245EDb6D2554093E949E5f400490fF26A228Fa"
+      address: "0xCB08d4f099a222dB7c7a806fd11608d064079f4c"
       abi: Distributor
-      startBlock: 31179687
+      startBlock: 31229451
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9

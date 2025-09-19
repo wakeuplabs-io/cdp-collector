@@ -3,7 +3,7 @@ import {
   tokenService
 } from "@/config";
 import { CdpService } from "@/lib/services/cdp";
-import { TokenWithBalance } from "@/types/token";
+import { Token, TokenWithBalance } from "@/types/token";
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { Address } from "viem";
@@ -12,7 +12,7 @@ export const useBalances = (
   address?: Address
 ): { balances: TokenWithBalance[]; isLoading: boolean } => {
   const emptyBalances = useMemo(
-    () => SUPPORTED_ASSETS.map((token) => ({ ...token, balance: BigInt(0) })),
+    () => Object.values(SUPPORTED_ASSETS).map((token) => ({ ...token, balance: BigInt(0) })),
     []
   );
 
@@ -20,14 +20,14 @@ export const useBalances = (
     fetcher: async () => {
       if (!address) return emptyBalances;
 
-      const balances = await Promise.all(
-        SUPPORTED_ASSETS.map(async (token) => ({
-          ...token,
-          balance: await tokenService.getBalance(token.address, address),
-        }))
-      );
+      const res = await fetch(`/api/balances/${address}`)
+      if (!res.ok) throw new Error("Failed to get balances");
+      const balances = await res.json();
 
-      return balances;
+      return balances.map((b: { token: Token; balance: string }) => ({
+        ...b.token,
+        balance: BigInt(b.balance),
+      }));
     },
     refreshInterval: 10000,
   });

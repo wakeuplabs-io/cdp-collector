@@ -1,3 +1,5 @@
+"use client";
+
 import { CdpService } from "@/lib/services/cdp";
 import { Token } from "@/types/token";
 import { useState } from "react";

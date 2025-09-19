@@ -1,6 +1,6 @@
 "use client";
 
-import { SUPPORTED_ASSETS, tokenService, USDC } from "@/config";
+import { SUPPORTED_ASSETS, tokenService } from "@/config";
 import { useMakeDonation } from "@/hooks/distributor";
 import { useSwap } from "@/hooks/swap";
 import { shortenAddress } from "@/lib/utils";
@@ -26,7 +26,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { makeDonation } = useMakeDonation();
   const { currentUser } = useCurrentUser();
 
-  const token = SUPPORTED_ASSETS.find((t) => t.address === tokenAddress);
+  const token = Object.values(SUPPORTED_ASSETS).find((t) => t.address === tokenAddress);
 
   useEffect(() => {
     async function swapAndDonate(
@@ -40,13 +40,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         let donationAmount = amount;
 
         if (token.symbol !== "USDC") {
-          const balanceBefore = await tokenService.getBalance(
-            USDC.address,
+          const balanceBefore
+           = await tokenService.getBalance(
+            SUPPORTED_ASSETS.USDC.address,
             evmAddress
           );
-          await swap({ from: token, to: USDC, amount });
+          await swap({ from: token, to: SUPPORTED_ASSETS.USDC, amount });
           const balanceAfter = await tokenService.getBalance(
-            USDC.address,
+            SUPPORTED_ASSETS.USDC.address,
             evmAddress
           );
           donationAmount = balanceAfter - balanceBefore;

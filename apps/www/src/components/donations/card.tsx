@@ -1,4 +1,4 @@
-import { USDC } from "@/config";
+import { SUPPORTED_ASSETS } from "@/config";
 import { openExplorerTx } from "@/lib/explorer";
 import { formatUsdcBalance, shortenAddress } from "@/lib/utils";
 import { Donation } from "@/types/distributor";
@@ -17,10 +17,10 @@ export function DonationCard({ donation }: { donation: Donation }) {
 
       <div className="bg-muted/50 rounded-xl p-4 mt-4 flex items-center justify-between">
         <span className="font-bold text-2xl">
-          ${formatUsdcBalance(donation.amount, USDC.decimals)}
+          ${formatUsdcBalance(donation.amount, SUPPORTED_ASSETS.USDC.decimals)}
         </span>
         <span className="text-muted-foreground border rounded-full bg-muted px-2 py-1 text-sm font-medium">
-          {formatUsdcBalance(donation.amount, USDC.decimals)} USDC
+          {formatUsdcBalance(donation.amount, SUPPORTED_ASSETS.USDC.decimals)} USDC
         </span>
       </div>
 

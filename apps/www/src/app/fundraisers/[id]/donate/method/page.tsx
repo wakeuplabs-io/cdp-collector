@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { publicClient } from "@/config";
+import { publicClient, SUPPORTED_ASSETS } from "@/config";
 import { useOnramp } from "@/hooks/onramp";
 import { useEvmAddress } from "@coinbase/cdp-hooks";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   const router = useRouter();
   const { evmAddress } = useEvmAddress();
-  const { openOnramp } = useOnramp({ to: evmAddress!, assets: ["USDC"] });
+  const { openOnramp } = useOnramp({ to: evmAddress!, assets: Object.keys(SUPPORTED_ASSETS) });
 
   const onDonateWithFiat = useCallback(async () => {
     const latestBlock = await publicClient.getBlockNumber();

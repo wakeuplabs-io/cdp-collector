@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { USDC } from "@/config";
+import { SUPPORTED_ASSETS } from "@/config";
 import { usePoolSummary } from "@/hooks/distributor";
 import { formatUsdcBalance, shortenAddress } from "@/lib/utils";
 import { Pool, PoolStatus } from "@/types/distributor";
@@ -24,10 +24,10 @@ export const FundraiserCard: React.FC<{ pool: Pool }> = ({ pool }) => {
 
       <div className="bg-muted/50 rounded-xl p-4 mt-4 flex items-center justify-between">
         <span className="font-bold text-2xl">
-          ${formatUsdcBalance(poolSummary?.totalDonationsAmount ?? 0, USDC.decimals)}
+          ${formatUsdcBalance(poolSummary?.totalDonationsAmount ?? 0, SUPPORTED_ASSETS.USDC.decimals)}
         </span>
         <span className="text-muted-foreground border rounded-full bg-muted px-2 py-1 text-sm font-medium">
-          {formatUsdcBalance(poolSummary?.totalDonationsAmount ?? 0, USDC.decimals)} USDC
+          {formatUsdcBalance(poolSummary?.totalDonationsAmount ?? 0, SUPPORTED_ASSETS.USDC.decimals)} USDC
         </span>
       </div>
 

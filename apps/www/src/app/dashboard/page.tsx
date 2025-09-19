@@ -5,7 +5,7 @@ import { FundraiserCard } from "@/components/fundraisers/card";
 import { CreateFundraiser } from "@/components/fundraisers/create";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { USDC } from "@/config";
+import { SUPPORTED_ASSETS } from "@/config";
 import { useUserPools, useUserSummary } from "@/hooks/distributor";
 import { formatUsdcBalance } from "@/lib/utils";
 import { useCurrentUser, useIsInitialized } from "@coinbase/cdp-hooks";
@@ -60,7 +60,7 @@ export default function Dashboard() {
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUsdcBalance(totalDonationsAmount, USDC.decimals)} USDC
+              {formatUsdcBalance(totalDonationsAmount, SUPPORTED_ASSETS.USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donations
@@ -72,7 +72,7 @@ export default function Dashboard() {
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUsdcBalance(averageDonation, USDC.decimals)} USDC
+              {formatUsdcBalance(averageDonation, SUPPORTED_ASSETS.USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation

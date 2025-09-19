@@ -12,7 +12,7 @@ export const useBalances = (
   address?: Address
 ): { balances: TokenWithBalance[]; isLoading: boolean } => {
   const emptyBalances = useMemo(
-    () => SUPPORTED_ASSETS.map((token) => ({ ...token, balance: BigInt(0) })),
+    () => Object.values(SUPPORTED_ASSETS).map((token) => ({ ...token, balance: BigInt(0) })),
     []
   );
 

@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { USDC } from "@/config";
+import { SUPPORTED_ASSETS } from "@/config";
 import {
   useDonations,
   usePool,
@@ -156,7 +156,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUsdcBalance(totalDonationsAmount, USDC.decimals)} USDC
+              {formatUsdcBalance(totalDonationsAmount, SUPPORTED_ASSETS.USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Total Donations 
@@ -168,7 +168,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUsdcBalance(averageDonation, USDC.decimals)} USDC
+              {formatUsdcBalance(averageDonation, SUPPORTED_ASSETS.USDC.decimals)} USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation

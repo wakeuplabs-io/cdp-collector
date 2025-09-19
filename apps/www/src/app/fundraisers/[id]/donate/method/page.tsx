@@ -12,7 +12,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   const router = useRouter();
   const { evmAddress } = useEvmAddress();
-  const { openOnramp } = useOnramp({ to: evmAddress!, assets: SUPPORTED_ASSETS.map((asset) => asset.symbol) });
+  const { openOnramp } = useOnramp({ to: evmAddress!, assets: Object.keys(SUPPORTED_ASSETS) });
 
   const onDonateWithFiat = useCallback(async () => {
     const latestBlock = await publicClient.getBlockNumber();

@@ -23,7 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ addr
       });
 
       return NextResponse.json(balances.balances.map((b) => ({
-        token: SUPPORTED_ASSETS.find((t) => t.address.toLowerCase() === b.token.contractAddress.toLowerCase()),
+        token: Object.values(SUPPORTED_ASSETS).find((t) => t.address.toLowerCase() === b.token.contractAddress.toLowerCase()),
         balance: b.amount.amount.toString(),
       })).filter((b) => b.token !== undefined));
     } catch (error) {

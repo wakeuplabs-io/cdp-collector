@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogTitle
 } from "@/components/ui/dialog";
-import { USDC } from "@/config";
+import { SUPPORTED_ASSETS } from "@/config";
 import { useBalances, useWithdraw } from "@/hooks/balance";
 import { openExplorerTx } from "@/lib/explorer";
 import { formatUsdcBalance, shortenAddress } from "@/lib/utils";
@@ -177,7 +177,7 @@ export const AccountManager = () => {
 
   const usdcBalance = useMemo(
     () => {
-      return balances.find((balance) => balance.address.toLowerCase() === USDC.address.toLowerCase())},
+      return balances.find((balance) => balance.address.toLowerCase() === SUPPORTED_ASSETS.USDC.address.toLowerCase())},
     [balances]
   );
 
@@ -228,7 +228,7 @@ export const AccountManager = () => {
           />
           <span className="text-sm">{shortenAddress(evmAddress ?? "")}</span>
           <span className="text-sm text-muted-foreground">
-            {formatUsdcBalance(usdcBalance?.balance ?? BigInt(0), USDC.decimals)}{" "}
+            {formatUsdcBalance(usdcBalance?.balance ?? BigInt(0), SUPPORTED_ASSETS.USDC.decimals)}{" "}
             USDC
           </span>
         </button>

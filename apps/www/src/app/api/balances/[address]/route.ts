@@ -1,8 +1,9 @@
 import { NETWORK, SUPPORTED_ASSETS } from "@/config";
 import { CdpClient } from "@coinbase/cdp-sdk";
 import { NextResponse } from "next/server";
+import { Address } from "viem";
 
-export async function GET(request: Request, { params }: { params: { address: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ address: string }> }) {
     try {
 
       // Get API credentials from environment variables
@@ -17,7 +18,7 @@ export async function GET(request: Request, { params }: { params: { address: str
 
       const {address} = await params;
       const balances = await cdp.evm.listTokenBalances({
-        address: address,
+        address: address as Address,
         network: NETWORK,
       });
 

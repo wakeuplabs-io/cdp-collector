@@ -16,7 +16,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   useIncomingTransactions(evmAddress!, SUPPORTED_ASSETS, BigInt(startBlock ?? 0), (tx) => {
     // Received transaction, let's make donation
-    router.push(`/fundraisers/${id}/donate/processing?txHash=${tx.txHash}&amount=${tx.amount}&token=${tx.token}`);
+    router.push(`/fundraisers/${id}/donate/processing?amount=${tx.amount.toString()}&token=${tx.token}` + (tx.txHash ? `&txHash=${tx.txHash}` : ""));
   }); 
 
   return (

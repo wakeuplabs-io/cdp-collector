@@ -54,9 +54,9 @@ export class TokenService {
   }
 
   async prepareApprove(
-    amount: bigint,
     token: Address,
-    to: `0x${string}`
+    spender: Address,
+    amount: bigint,
   ): Promise<TxParameters[]> {
     if (token === NATIVE_ADDRESS) {
       return [];
@@ -68,7 +68,7 @@ export class TokenService {
         data: encodeFunctionData({
           abi: erc20Abi,
           functionName: "approve",
-          args: [to, amount],
+          args: [spender, amount],
         }),
         value: 0n,
       },

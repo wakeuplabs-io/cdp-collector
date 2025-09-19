@@ -3,7 +3,6 @@ import {
   CDP_ONRAMP_BASE_URL,
   NATIVE_ADDRESS,
   NETWORK,
-  publicClient,
   tokenService,
   TRADE_PERMIT2_ADDRESS,
 } from "@/config";
@@ -73,23 +72,23 @@ export class CdpService {
     if (from.address !== NATIVE_ADDRESS) {
       console.log("checking allowance");
       const allowance = await tokenService.getAllowance(
-        from.address as Address,
+        from.address,
         smartAccount,
         TRADE_PERMIT2_ADDRESS
       );
 
       if (allowance < amount) {
-        console.log("Adding allowance")
+        console.log("Adding allowance");
         const result = await CdpService.sendUserOperation({
           calls: await tokenService.prepareApprove(
-            amount,
-            from.address as Address,
-            TRADE_PERMIT2_ADDRESS
+            from.address,
+            TRADE_PERMIT2_ADDRESS,
+            amount
           ),
           useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
         });
 
-        await publicClient.waitForTransactionReceipt({
+        await bundlerClient.waitForUserOperationReceipt({
           hash: result.userOperationHash,
         });
       }
@@ -130,7 +129,7 @@ export class CdpService {
       // Append the signature length and signature to the transaction data
       txData = concat([txData, signatureLengthInHex, signature.signature]);
 
-      console.log("signedMessage", signature, signatureLengthInHex)
+      console.log("signedMessage", signature, signatureLengthInHex);
     }
 
     // Submit the swap as a user operation

@@ -33,6 +33,7 @@ interface ProvidersProps {
 const CDP_CONFIG: Config = {
   projectId: CDP_PROJECT_ID,
   createAccountOnLogin: CDP_CREATE_ACCOUNT_TYPE,
+
 };
 
 const APP_CONFIG: AppConfig = {

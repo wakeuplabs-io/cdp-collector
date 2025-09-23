@@ -31,6 +31,7 @@ export const CDP_PROJECT_ID = process.env.NEXT_PUBLIC_CDP_PROJECT_ID as string;
 export const CDP_BASE_URL = "https://api.developer.coinbase.com";
 export const CDP_ONRAMP_BASE_URL = process.env
   .NEXT_PUBLIC_CDP_ONRAMP_BASE_URL as string;
+export const CDP_CLIENT_API_KEY = process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY as string;
 
 // ipfs
 
@@ -40,12 +41,16 @@ export const PINATA_GATEWAY = process.env.NEXT_PUBLIC_PINATA_GATEWAY as string;
 // subgraph
 
 export const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL as string;
-export const SUBGRAPH_API_KEY = process.env.NEXT_PUBLIC_SUBGRAPH_API_KEY as string;
+export const SUBGRAPH_API_KEY = process.env
+  .NEXT_PUBLIC_SUBGRAPH_API_KEY as string;
 
 // tokens
 
 export const NATIVE_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-export const SUPPORTED_ASSETS_BY_CHAIN: Record<Network, { [key: string]: Token}> = {
+export const SUPPORTED_ASSETS_BY_CHAIN: Record<
+  Network,
+  { [key: string]: Token }
+> = {
   base: {
     USDC: {
       decimals: 6,

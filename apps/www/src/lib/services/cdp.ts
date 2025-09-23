@@ -1,5 +1,6 @@
 import {
   bundlerClient,
+  CDP_CLIENT_API_KEY,
   CDP_ONRAMP_BASE_URL,
   CHAIN_ID,
   NATIVE_ADDRESS,
@@ -12,9 +13,36 @@ import {
   getCurrentUser,
   sendUserOperation,
   SendUserOperationOptions,
+  signEvmTypedData,
 } from "@coinbase/cdp-core";
-import { Address, concat, Hex, numberToHex, size } from "viem";
-import { signAndWrapTypedDataForSmartAccount } from "../utils/cdp-smart-wallet-signatures";
+import {
+  Address,
+  concat,
+  encodeAbiParameters,
+  encodePacked,
+  hashTypedData,
+  Hex,
+  numberToHex,
+  size,
+  sliceHex,
+} from "viem";
+
+export type CdpSqlQueryEventResult = {
+  action: string;
+  address: Hex;
+  block_hash: Hex;
+  block_number: string;
+  block_timestamp: string;
+  event_name: string;
+  event_signature: string;
+  log_index: number;
+  parameter_types: Record<string, string>;
+  parameters: Record<string, string>;
+  topics: Hex[];
+  transaction_from: Hex;
+  transaction_hash: Hex;
+  transaction_to: Hex;
+};
 
 export class CdpService {
   static async sendUserOperation(
@@ -54,6 +82,28 @@ export class CdpService {
       }&fiatCurrency=USD&sessionToken=${token}` +
       (amount ? `&presetCryptoAmount=${amount}` : "")
     );
+  }
+
+  static async sqlQueryEvents(sql: string): Promise<CdpSqlQueryEventResult[]> {
+    const headers = new Headers();
+    headers.append("Authorization", `Bearer ${CDP_CLIENT_API_KEY}`);
+    headers.append("Content-Type", "application/json");
+
+    if (!sql.includes(".events")) {
+      // Mostly for type safety
+      throw new Error("SQL query not supported");
+    }
+
+    const res = await fetch(
+      "https://api.cdp.coinbase.com/platform/v2/data/query/run",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ sql }),
+      }
+    ).then((response) => response.json());
+
+    return res;
   }
 
   static async swap(
@@ -105,12 +155,13 @@ export class CdpService {
 
     // If permit2 is needed, sign it with the owner
     if (swapResult.permit2?.domain) {
-      const wrappedSignature = await signAndWrapTypedDataForSmartAccount({
-        smartAccount,
-        chainId: CHAIN_ID,
-        typedData: swapResult.permit2,
-        owner,
-      });
+      const wrappedSignature =
+        await CdpService.signAndWrapTypedDataForSmartAccount({
+          smartAccount,
+          chainId: CHAIN_ID,
+          typedData: swapResult.permit2,
+          owner,
+        });
 
       // Calculate the signature length as a 32-byte hex value
       const signatureLengthInHex = numberToHex(size(wrappedSignature), {
@@ -141,5 +192,116 @@ export class CdpService {
     });
 
     return { hash: userOpHash.userOperationHash };
+  }
+
+  /// Ported from https://github.com/coinbase/cdp-sdk/blob/7afd6a7ac83e153e18cc76b455c2bc8e0bf32f72/typescript/src/actions/evm/signAndWrapTypedDataForSmartAccount.ts#L102
+  static signAndWrapTypedDataForSmartAccount = async (options: {
+    smartAccount: Address;
+    chainId: bigint;
+    typedData: any;
+    owner: Address;
+  }) => {
+    const { smartAccount, chainId, typedData, owner } = options;
+
+    const replaySafeTypedData = CdpService.#createReplaySafeTypedData({
+      typedData,
+      chainId,
+      smartAccountAddress: smartAccount as Hex,
+    });
+
+    const signature = await signEvmTypedData({
+      evmAccount: owner,
+      typedData: replaySafeTypedData,
+    });
+
+    // Wrap the signature in the format expected by the smart contract
+    const wrappedSignature = CdpService.#createSmartAccountSignatureWrapper({
+      signatureHex: signature.signature as Hex,
+      ownerIndex: 0n,
+    });
+
+    return wrappedSignature;
+  };
+
+  /// Ported from https://github.com/coinbase/cdp-sdk/blob/7afd6a7ac83e153e18cc76b455c2bc8e0bf32f72/typescript/src/actions/evm/signAndWrapTypedDataForSmartAccount.ts#L151
+  static #createReplaySafeTypedData({
+    typedData,
+    chainId,
+    smartAccountAddress,
+  }: {
+    typedData: any;
+    chainId: bigint;
+    smartAccountAddress: Hex;
+  }): any {
+    // First hash the original typed data
+    const originalHash = hashTypedData(typedData as any);
+
+    // Create and return the replay-safe typed data structure
+    return {
+      domain: {
+        name: "Coinbase Smart Wallet",
+        version: "1",
+        chainId: Number(chainId),
+        verifyingContract: smartAccountAddress,
+      },
+      types: {
+        EIP712Domain: [
+          { name: "name", type: "string" },
+          { name: "version", type: "string" },
+          { name: "chainId", type: "uint256" },
+          { name: "verifyingContract", type: "address" },
+        ],
+        CoinbaseSmartWalletMessage: [{ name: "hash", type: "bytes32" }],
+      },
+      primaryType: "CoinbaseSmartWalletMessage" as const,
+      message: {
+        hash: originalHash,
+      },
+    };
+  }
+
+  /// Ported from https://github.com/coinbase/cdp-sdk/blob/7afd6a7ac83e153e18cc76b455c2bc8e0bf32f72/typescript/src/actions/evm/signAndWrapTypedDataForSmartAccount.ts#L199
+  static #createSmartAccountSignatureWrapper({
+    signatureHex,
+    ownerIndex,
+  }: {
+    signatureHex: Hex;
+    ownerIndex: bigint;
+  }): Hex {
+    // Decompose 65-byte hex signature into r (32 bytes), s (32 bytes), v (1 byte)
+    const r = sliceHex(signatureHex, 0, 32);
+    const s = sliceHex(signatureHex, 32, 64);
+    const v = Number(`0x${signatureHex.slice(130, 132)}`); // 130 = 2 + 64 + 64
+
+    const signatureData = encodePacked(
+      ["bytes32", "bytes32", "uint8"],
+      [r, s, v]
+    );
+
+    return encodeAbiParameters(
+      [
+        // SignatureWrapperStruct ported from  https://github.com/coinbase/cdp-sdk/blob/7afd6a7ac83e153e18cc76b455c2bc8e0bf32f72/typescript/src/actions/evm/signAndWrapTypedDataForSmartAccount.ts#L233
+        {
+          components: [
+            {
+              name: "ownerIndex",
+              type: "uint8",
+            },
+            {
+              name: "signatureData",
+              type: "bytes",
+            },
+          ],
+          name: "SignatureWrapper",
+          type: "tuple",
+        },
+      ],
+      [
+        {
+          ownerIndex: Number(ownerIndex),
+          signatureData,
+        },
+      ]
+    ) as Hex;
   }
 }

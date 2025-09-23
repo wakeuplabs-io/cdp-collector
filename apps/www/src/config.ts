@@ -9,6 +9,7 @@ import { Token } from "./types/token";
 // chain
 
 export const NETWORK = process.env.NEXT_PUBLIC_NETWORK as Network;
+export const CHAIN_ID = NETWORK === "base" ? 8453n : 84532n;
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL as string;
 export const EXPLORER_BASE_URL = process.env
   .NEXT_PUBLIC_EXPLORER_BASE_URL as string;

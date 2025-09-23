@@ -35,32 +35,45 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       token: Token,
       amount: bigint
     ) {
-      try {
-        // check if we need to swap, otherwise donate directly
-        let donationAmount = amount;
+      const maxRetries = 3;
+      const retryDelay = 1000; // 1 second
 
-        if (token.symbol !== "USDC") {
-          const balanceBefore
-           = await tokenService.getBalance(
-            SUPPORTED_ASSETS.USDC.address,
-            evmAddress
-          );
-          await swap({ from: token, to: SUPPORTED_ASSETS.USDC, amount });
-          const balanceAfter = await tokenService.getBalance(
-            SUPPORTED_ASSETS.USDC.address,
-            evmAddress
-          );
-          donationAmount = balanceAfter - balanceBefore;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          // check if we need to swap, otherwise donate directly
+          let donationAmount = amount;
+
+          if (token.symbol !== "USDC") {
+            const balanceBefore = await tokenService.getBalance(
+              SUPPORTED_ASSETS.USDC.address,
+              evmAddress
+            );
+            await swap({ from: token, to: SUPPORTED_ASSETS.USDC, amount });
+            const balanceAfter = await tokenService.getBalance(
+              SUPPORTED_ASSETS.USDC.address,
+              evmAddress
+            );
+            donationAmount = balanceAfter - balanceBefore;
+          }
+
+          const { hash } = await makeDonation(poolId, donationAmount);
+          router.push(`/fundraisers/${poolId}/donate/success?txHash=${hash}`);
+          return; // Success, exit the retry loop
+        } catch (error) {
+          console.error(`Attempt ${attempt} failed:`, error);
+          
+          if (attempt === maxRetries) {
+            // Final attempt failed
+            toast.error("Something went wrong", {
+              description:
+                "You can withdraw the funds from your account and try again",
+            });
+            return;
+          }
+          
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
-
-        const { hash } = await makeDonation(poolId, donationAmount);
-        router.push(`/fundraisers/${poolId}/donate/success?txHash=${hash}`);
-      } catch (error) {
-        console.error(error);
-        toast.error("Something went wrong", {
-          description:
-            "You can withdraw the funds from your account and try again",
-        });
       }
     }
 

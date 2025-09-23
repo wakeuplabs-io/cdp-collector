@@ -1,11 +1,11 @@
 import "dotenv/config";
 import {
-    Chain,
-    createPublicClient,
-    createWalletClient,
-    http,
-    PublicClient,
-    WalletClient,
+  Chain,
+  createPublicClient,
+  createWalletClient,
+  http,
+  PublicClient,
+  WalletClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base, baseSepolia } from "viem/chains";
@@ -20,7 +20,7 @@ export const configByNetwork: Record<
     privateKey: `0x${string}`;
     distributor: `0x${string}`;
     usdc: `0x${string}`;
-    blockscoutApiKey: string;
+    etherscanApiKey: string;
   }
 > = {
   "base-mainnet": {
@@ -29,7 +29,7 @@ export const configByNetwork: Record<
     privateKey: process.env.BASE_PRIVATE_KEY as `0x${string}`,
     distributor: process.env.BASE_DISTRIBUTOR_ADDRESS as `0x${string}`,
     usdc: process.env.BASE_USDC_ADDRESS as `0x${string}`,
-    blockscoutApiKey: process.env.BASE_BLOCKSCOUT_API_KEY as string,
+    etherscanApiKey: process.env.BASE_ETHERSCAN_API_KEY as string,
   },
   "base-sepolia": {
     chain: baseSepolia,
@@ -37,7 +37,7 @@ export const configByNetwork: Record<
     privateKey: process.env.BASE_SEPOLIA_PRIVATE_KEY as `0x${string}`,
     distributor: process.env.BASE_SEPOLIA_DISTRIBUTOR_ADDRESS as `0x${string}`,
     usdc: process.env.BASE_SEPOLIA_USDC_ADDRESS as `0x${string}`,
-    blockscoutApiKey: process.env.BASE_SEPOLIA_BLOCKSCOUT_API_KEY as string,
+    etherscanApiKey: process.env.BASE_SEPOLIA_ETHERSCAN_API_KEY as string,
   },
 };
 

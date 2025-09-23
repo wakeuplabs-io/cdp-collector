@@ -28,31 +28,31 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      'base-mainnet': configByNetwork["base-mainnet"].blockscoutApiKey,
-      'base-sepolia': configByNetwork["base-sepolia"].blockscoutApiKey,
+      "base-mainnet": configByNetwork["base-mainnet"].etherscanApiKey,
+      "base-sepolia": configByNetwork["base-sepolia"].etherscanApiKey,
     },
     customChains: [
       {
         network: "base-mainnet",
         chainId: 8453,
         urls: {
-          apiURL: "https://base.blockscout.com/api",
-          browserURL: "https://base.blockscout.com/",
-        }
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org/",
+        },
       },
       {
         network: "base-sepolia",
         chainId: 84532,
         urls: {
-          apiURL: "https://base-sepolia.blockscout.com/api",
-          browserURL: "https://base-sepolia.blockscout.com/",
-        }
-      }
-    ]
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org/",
+        },
+      },
+    ],
   },
   sourcify: {
-    enabled: false
-  }
+    enabled: false,
+  },
 };
 
 export default config;

@@ -34,16 +34,6 @@ interface IDistributorEvents {
         uint256 amount
     );
 
-    /// @notice Emitted when funds are withdrawn from a pool
-    /// @param member The address of the member withdrawing
-    /// @param amount The amount withdrawn in USDC
-    /// @param recipient The address receiving the funds
-    event FundsWithdrawn(
-        address indexed member,
-        address indexed recipient,
-        uint256 amount
-    );
-
     /// @notice Emitted when a pool is deactivated
     /// @param poolId The pool identifier
     /// @param deactivatedBy The address that deactivated the pool

@@ -150,19 +150,19 @@ export class CdpService {
       `/api/trade/quote?from=${fromToken.address}&to=${toToken.address}&amount=${fromAmount}&taker=${smartAccount}&signer=${owner}`
     );
     if (!res.ok) throw new Error("quote API failed");
-    const swapResult = await res.json();
+    const quote = await res.json();
 
     // Prepare the swap transaction data
-    let txData = swapResult.transaction!.data as Hex;
+    let txData = quote.transaction!.data as Hex;
 
     // If permit2 is needed, sign it with the owner
-    if (swapResult.permit2?.domain) {
+    if (quote.permit2?.domain) {
       const wrappedSignature =
         await CdpService.signAndWrapTypedDataForSmartAccount({
           owner,
           smartAccount,
           chainId: CHAIN_ID,
-          typedData: swapResult.permit2,
+          typedData: quote.permit2,
         });
 
       // Calculate the signature length as a 32-byte hex value
@@ -175,13 +175,17 @@ export class CdpService {
       txData = concat([txData, signatureLengthInHex, wrappedSignature]);
     }
 
+    console.log("txData", txData);
+    console.log("swapResult.transaction!.to", quote.transaction!.to);
+    console.log("swapResult.transaction!.value", quote.transaction!.value);
+
     // Submit the swap as a user operation
     const userOpHash = await CdpService.sendUserOperation({
       calls: [
         {
-          to: swapResult.transaction!.to as Address,
-          value: swapResult.transaction!.value
-            ? BigInt(swapResult.transaction!.value)
+          to: quote.transaction!.to as Address,
+          value: quote.transaction!.value
+            ? BigInt(quote.transaction!.value)
             : BigInt(0),
           data: txData,
         },
@@ -189,9 +193,12 @@ export class CdpService {
       useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
     });
 
-    await bundlerClient.waitForUserOperationReceipt({
+    console.log("userOpHash", userOpHash);
+
+     await bundlerClient.waitForUserOperationReceipt({
       hash: userOpHash.userOperationHash,
     });
+
 
     return { hash: userOpHash.userOperationHash };
   }

@@ -61,6 +61,9 @@ export function useIncomingTransactions(
           // Only poll if there are new blocks
           if (lastPolledBlock >= currentBlock) continue;
 
+          // Limit to 10 blocks at a time to avoid rate limiting
+          const toBlock = currentBlock > lastPolledBlock + 10n ? lastPolledBlock + 10n : currentBlock;
+          
           const logs = await publicClient.getLogs({
             address: token.address,
             event: parseAbiItem(
@@ -70,7 +73,7 @@ export function useIncomingTransactions(
               to: walletAddress,
             },
             fromBlock: lastPolledBlock + 1n,
-            toBlock: currentBlock,
+            toBlock,
           });
 
           if (logs.length > 0) {
@@ -85,7 +88,7 @@ export function useIncomingTransactions(
           }
 
           // Update last polled block for this token
-          lastPolledBlockRef.current[tokenKey] = currentBlock;
+          lastPolledBlockRef.current[tokenKey] = toBlock;
         }
       } catch (error) {
         console.error("Error polling for transfers:", error);
@@ -96,7 +99,7 @@ export function useIncomingTransactions(
     pollForTransfers();
 
     // Set up interval to poll every 1 second
-    intervalRef.current = setInterval(pollForTransfers, 1000);
+    intervalRef.current = setInterval(pollForTransfers, 2000);
 
     return () => {
       if (intervalRef.current) {

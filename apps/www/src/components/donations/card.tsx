@@ -28,7 +28,7 @@ export function DonationCard({ donation }: { donation: Donation }) {
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground">Created</p>
           <p className="text-sm font-medium">
-            {donation.createdAt.toLocaleDateString()}
+            {donation.createdAt.toLocaleDateString() + " " + donation.createdAt.toLocaleTimeString()}
           </p>
         </div>
 

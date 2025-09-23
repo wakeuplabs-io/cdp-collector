@@ -232,7 +232,7 @@ export const useDonations = (
         donor: donation.parameters.donor,
         amount: BigInt(donation.parameters.amount),
         transactionHash: donation.transaction_hash,
-        createdAt: new Date(Number(donation.block_timestamp) * 1000),
+        createdAt: new Date(donation.block_timestamp),
       }));
     },
   });

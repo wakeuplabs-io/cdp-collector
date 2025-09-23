@@ -62,7 +62,7 @@ export function useIncomingTransactions(
           if (lastPolledBlock >= currentBlock) continue;
 
           // Limit to 10 blocks at a time to avoid rate limiting
-          const toBlock = currentBlock > lastPolledBlock + 10n ? lastPolledBlock + 10n : currentBlock;
+          const toBlock = currentBlock > lastPolledBlock + 100n ? lastPolledBlock + 100n : currentBlock;
           
           const logs = await publicClient.getLogs({
             address: token.address,

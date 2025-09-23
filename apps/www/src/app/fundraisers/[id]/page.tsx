@@ -118,7 +118,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button disabled={pool?.status !== PoolStatus.ACTIVE} variant="outline" className="h-9 w-9 rounded-full">
+                <Button
+                  disabled={pool?.status !== PoolStatus.ACTIVE}
+                  variant="outline"
+                  className="h-9 w-9 rounded-full"
+                >
                   <EllipsisVerticalIcon className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -138,14 +142,15 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           <div>
             <h1 className="font-bold">Members</h1>
             <p>
-              {members
-                .map(
-                  (member) =>
-                    `${shortenAddress(member.member)} ${
-                      member.percentage / 100n
-                    }%`
-                )
-                .join(" | ")}
+              {members.map((member, index) => (
+                <span key={member.member}>
+                  <span>{shortenAddress(member.member)}</span>
+                  <span className="bg-white rounded-full px-2 py-1 text-xs font-medium border ml-2">
+                    {member.percentage / 100n}%
+                  </span>
+                  {index !== members.length - 1 && <span className="text-muted-foreground">|</span>}
+                </span>
+              ))}
             </p>
           </div>
         </div>
@@ -156,10 +161,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               <CurrencyDollarIcon className="w-5 h-5 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUsdcBalance(totalDonationsAmount, SUPPORTED_ASSETS.USDC.decimals)} USDC
+              {formatUsdcBalance(
+                totalDonationsAmount,
+                SUPPORTED_ASSETS.USDC.decimals
+              )}{" "}
+              USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
-              Total Donations 
+              Total Donations
             </h2>
           </div>
 
@@ -168,7 +177,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               <CurrencyDollarIcon className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-2xl font-bold">
-              {formatUsdcBalance(averageDonation, SUPPORTED_ASSETS.USDC.decimals)} USDC
+              {formatUsdcBalance(
+                averageDonation,
+                SUPPORTED_ASSETS.USDC.decimals
+              )}{" "}
+              USDC
             </p>
             <h2 className="text-sm text-muted-foreground font-medium">
               Average Donation
@@ -193,7 +206,10 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         {donations?.length ? (
           <div className="grid grid-cols-3 gap-4 mt-10">
             {donations.map((donation) => (
-              <DonationCard key={donation.transactionHash} donation={donation} />
+              <DonationCard
+                key={donation.transactionHash}
+                donation={donation}
+              />
             ))}
           </div>
         ) : (

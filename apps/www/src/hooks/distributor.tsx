@@ -4,7 +4,7 @@ import {
   distributorService,
   NETWORK,
 } from "@/config";
-import { CdpService } from "@/lib/services/cdp";
+import { CdpService, CdpSqlQueryEventResult } from "@/lib/services/cdp";
 import { Donation, Pool, PoolMember } from "@/types/distributor";
 import { useEvmAddress } from "@coinbase/cdp-hooks";
 import { useState } from "react";
@@ -215,11 +215,19 @@ export const useDonations = (
   // TODO: implement pagination
   const { data, isLoading } = useSWR(`/api/distributor/${poolId}/donations`, {
     fetcher: async () => {
-      const res = await CdpService.sqlQueryEvents(
-        `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;`
-      );
+      // TODO: cors workaround
+      const res = await fetch("/api/events", {
+        method: "POST",
+        body: JSON.stringify({ sql: `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND parameters['poolId']::String = '${poolId}' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;` }),
+      });
+      const data = await res.json();
 
-      return res.map((donation) => ({
+      // TODO: use the following instead when cors is fixed
+      // const res = await CdpService.sqlQueryEvents(
+      //   `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;`
+      // );
+
+      return data.map((donation: CdpSqlQueryEventResult) => ({
         poolId: BigInt(donation.parameters.poolId),
         donor: donation.parameters.donor,
         amount: BigInt(donation.parameters.amount),

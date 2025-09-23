@@ -193,7 +193,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         {donations?.length ? (
           <div className="grid grid-cols-3 gap-4 mt-10">
             {donations.map((donation) => (
-              <DonationCard key={donation.id} donation={donation} />
+              <DonationCard key={donation.transactionHash} donation={donation} />
             ))}
           </div>
         ) : (

@@ -104,7 +104,7 @@ export class CdpService {
       }
     ).then((response) => response.json());
 
-    return res;
+    return res.result;
   }
 
   static async swap(
@@ -141,6 +141,7 @@ export class CdpService {
         await bundlerClient.waitForUserOperationReceipt({
           hash: result.userOperationHash,
         });
+        console.log("Approved", result.userOperationHash);
       }
     }
 
@@ -158,10 +159,10 @@ export class CdpService {
     if (swapResult.permit2?.domain) {
       const wrappedSignature =
         await CdpService.signAndWrapTypedDataForSmartAccount({
+          owner,
           smartAccount,
           chainId: CHAIN_ID,
           typedData: swapResult.permit2,
-          owner,
         });
 
       // Calculate the signature length as a 32-byte hex value

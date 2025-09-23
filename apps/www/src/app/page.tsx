@@ -99,7 +99,7 @@ export default function Home() {
         </div>
 
         {/* Feature icons */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-16 md:gap-24 py-8">
+        <div className="flex flex-col md:flex-row items-start justify-center gap-16 md:gap-24 py-8">
           <div className="flex flex-col items-center space-y-3">
             <div className="w-12 h-12 flex items-center justify-center bg-orange-500/20 rounded-md">
               <BoltIcon className="w-8 h-8 text-orange-500" />
@@ -141,7 +141,7 @@ export default function Home() {
         <div className="flex flex-col items-center space-y-8">
           <Button
             size="lg"
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-lg font-medium rounded-lg shadow-xl"
+            className="bg-green-500 hover:bg-green-600 text-white px-8 h-12 text-lg font-medium rounded-lg shadow-xl"
             asChild
           >
             <Link href={currentUser ? "/dashboard" : "/auth"}>Get Started</Link>

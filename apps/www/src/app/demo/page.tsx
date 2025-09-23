@@ -32,9 +32,11 @@ export default function Demo() {
         <Button
           onClick={() => {
             swap({
-              from: SUPPORTED_ASSETS.cbBTC,
-              to: SUPPORTED_ASSETS.USDC,
-              amount: 300n,
+              from: SUPPORTED_ASSETS.USDC,
+              to: SUPPORTED_ASSETS.cbBTC,
+              amount: 100000n,
+            }).then((hash) => {
+              console.log("hash", hash);
             });
           }}
           disabled={isLoading}

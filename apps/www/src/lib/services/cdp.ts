@@ -10,6 +10,7 @@ import {
 } from "@/config";
 import { Token } from "@/types/token";
 import {
+  EIP712TypedData,
   getCurrentUser,
   sendUserOperation,
   SendUserOperationOptions,
@@ -198,7 +199,7 @@ export class CdpService {
   static signAndWrapTypedDataForSmartAccount = async (options: {
     smartAccount: Address;
     chainId: bigint;
-    typedData: any;
+    typedData: EIP712TypedData;
     owner: Address;
   }) => {
     const { smartAccount, chainId, typedData, owner } = options;
@@ -229,12 +230,12 @@ export class CdpService {
     chainId,
     smartAccountAddress,
   }: {
-    typedData: any;
+    typedData: EIP712TypedData;
     chainId: bigint;
     smartAccountAddress: Hex;
-  }): any {
+  }): EIP712TypedData {
     // First hash the original typed data
-    const originalHash = hashTypedData(typedData as any);
+    const originalHash = hashTypedData(typedData);
 
     // Create and return the replay-safe typed data structure
     return {

@@ -219,7 +219,7 @@ export const useDonations = (
         `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;`
       );
 
-      return res.map((donation: any) => ({
+      return res.map((donation) => ({
         poolId: BigInt(donation.parameters.poolId),
         donor: donation.parameters.donor,
         amount: BigInt(donation.parameters.amount),

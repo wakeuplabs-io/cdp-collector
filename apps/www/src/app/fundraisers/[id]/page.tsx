@@ -141,17 +141,17 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           </div>
           <div>
             <h1 className="font-bold">Members</h1>
-            <p>
+            <div className="flex items-center gap-2">
               {members.map((member, index) => (
-                <span key={member.member}>
-                  <span>{shortenAddress(member.member)}</span>
-                  <span className="bg-white rounded-full px-2 py-1 text-xs font-medium border ml-2">
+                <span key={member.member} className="flex items-center gap-2">
+                  <span >{shortenAddress(member.member)}</span>
+                  <span className="bg-white rounded-full px-2 py-1 text-xs font-medium border">
                     {member.percentage / 100n}%
                   </span>
                   {index !== members.length - 1 && <span className="text-muted-foreground">|</span>}
                 </span>
               ))}
-            </p>
+            </div>
           </div>
         </div>
 

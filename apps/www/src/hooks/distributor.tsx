@@ -222,7 +222,6 @@ export const useDonations = (
       });
       const data = await res.json();
 
-      // TODO: use the following instead when cors is fixed
       // const res = await CdpService.sqlQueryEvents(
       //   `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;`
       // );

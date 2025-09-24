@@ -44,11 +44,8 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
           if (token.symbol !== "USDC") {
             const { amount: swappedAmount } = await swap({ from: token, to: SUPPORTED_ASSETS.USDC, amount });
-            console.log("swappedAmount", swappedAmount);
             donationAmount = swappedAmount;
           }
-
-          console.log("donating", donationAmount);
 
           const { hash } = await makeDonation(poolId, donationAmount);
           router.push(`/fundraisers/${poolId}/donate/success?txHash=${hash}`);

@@ -118,8 +118,6 @@ export class CdpService {
       throw new Error("Swap is not supported on base-sepolia");
     }
 
-    console.log("swapping", fromToken, toToken, fromAmount);
-
     const user = await getCurrentUser();
     const smartAccount = user?.evmSmartAccounts?.[0] as Address;
     const owner = user?.evmAccounts?.[0] as Address;
@@ -145,7 +143,6 @@ export class CdpService {
         await bundlerClient.waitForUserOperationReceipt({
           hash: result.userOperationHash,
         });
-        console.log("Approved", result.userOperationHash);
       }
     }
 
@@ -179,10 +176,6 @@ export class CdpService {
       txData = concat([txData, signatureLengthInHex, wrappedSignature]);
     }
 
-    console.log("txData", txData);
-    console.log("swapResult.transaction!.to", quote.transaction!.to);
-    console.log("swapResult.transaction!.value", quote.transaction!.value);
-
     // Submit the swap as a user operation
     const userOpHash = await CdpService.sendUserOperation({
       calls: [
@@ -199,13 +192,9 @@ export class CdpService {
 
 
     // from logs extract amount of tokens received
-    console.log("userOpHash", userOpHash);
-
     const receipt = await bundlerClient.waitForUserOperationReceipt({
       hash: userOpHash.userOperationHash,
     });
-
-    console.log("receipt", receipt);
 
     const parsedLogs = parseEventLogs({
       abi: erc20Abi,

@@ -274,7 +274,7 @@ This project serves as a foundation for building CDP-powered applications. Key a
 - **Cross-Chain**: Extend to other CDP-supported networks
 - **Enhanced Profiles**: Add reputation systems and achievement badges
 - **Integration APIs**: Connect with GitHub, portfolio sites, or other developer tools
-
+- **Pagination**: Add pagination support for donations, pool members and user pools listings
 
 ## 🤝 Contributing
 

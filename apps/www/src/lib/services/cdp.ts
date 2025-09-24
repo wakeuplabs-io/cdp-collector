@@ -21,9 +21,11 @@ import {
   concat,
   encodeAbiParameters,
   encodePacked,
+  erc20Abi,
   hashTypedData,
   Hex,
   numberToHex,
+  parseEventLogs,
   size,
   sliceHex,
 } from "viem";
@@ -111,10 +113,12 @@ export class CdpService {
     fromToken: Token,
     toToken: Token,
     fromAmount: bigint
-  ): Promise<{ hash: string }> {
+  ): Promise<{ hash: string, amount: bigint }> {
     if (NETWORK === "base-sepolia") {
       throw new Error("Swap is not supported on base-sepolia");
     }
+
+    console.log("swapping", fromToken, toToken, fromAmount);
 
     const user = await getCurrentUser();
     const smartAccount = user?.evmSmartAccounts?.[0] as Address;
@@ -193,14 +197,25 @@ export class CdpService {
       useCdpPaymaster: true, // Use the free CDP paymaster to cover the gas fees
     });
 
+
+    // from logs extract amount of tokens received
     console.log("userOpHash", userOpHash);
 
-     await bundlerClient.waitForUserOperationReceipt({
+    const receipt = await bundlerClient.waitForUserOperationReceipt({
       hash: userOpHash.userOperationHash,
     });
 
+    console.log("receipt", receipt);
 
-    return { hash: userOpHash.userOperationHash };
+    const parsedLogs = parseEventLogs({
+      abi: erc20Abi,
+      logs: receipt.logs,
+      eventName: "Transfer",
+    });
+
+    const amount = parsedLogs.find((log) => log.args.to === smartAccount)?.args?.value ?? BigInt(0);
+
+    return { hash: userOpHash.userOperationHash, amount };
   }
 
   /// Ported from https://github.com/coinbase/cdp-sdk/blob/7afd6a7ac83e153e18cc76b455c2bc8e0bf32f72/typescript/src/actions/evm/signAndWrapTypedDataForSmartAccount.ts#L102

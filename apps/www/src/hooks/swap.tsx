@@ -11,7 +11,7 @@ export const useSwap = () => {
     from: Token;
     to: Token;
     amount: bigint;
-  }): Promise<{ hash: string }> => {
+  }): Promise<{ hash: string, amount: bigint }> => {
     try {
       setIsLoading(true);
 

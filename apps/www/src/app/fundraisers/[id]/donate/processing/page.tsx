@@ -1,6 +1,6 @@
 "use client";
 
-import { SUPPORTED_ASSETS, tokenService } from "@/config";
+import { SUPPORTED_ASSETS } from "@/config";
 import { useMakeDonation } from "@/hooks/distributor";
 import { useSwap } from "@/hooks/swap";
 import { shortenAddress } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Address, formatUnits } from "viem";
+import { formatUnits } from "viem";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -30,7 +30,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   useEffect(() => {
     async function swapAndDonate(
-      evmAddress: Address,
       poolId: bigint,
       token: Token,
       amount: bigint
@@ -44,17 +43,12 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           let donationAmount = amount;
 
           if (token.symbol !== "USDC") {
-            const balanceBefore = await tokenService.getBalance(
-              SUPPORTED_ASSETS.USDC.address,
-              evmAddress
-            );
-            await swap({ from: token, to: SUPPORTED_ASSETS.USDC, amount });
-            const balanceAfter = await tokenService.getBalance(
-              SUPPORTED_ASSETS.USDC.address,
-              evmAddress
-            );
-            donationAmount = balanceAfter - balanceBefore;
+            const { amount: swappedAmount } = await swap({ from: token, to: SUPPORTED_ASSETS.USDC, amount });
+            console.log("swappedAmount", swappedAmount);
+            donationAmount = swappedAmount;
           }
+
+          console.log("donating", donationAmount);
 
           const { hash } = await makeDonation(poolId, donationAmount);
           router.push(`/fundraisers/${poolId}/donate/success?txHash=${hash}`);
@@ -80,7 +74,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     if (currentUser && token && !isExecuting.current) {
       isExecuting.current = true;
       swapAndDonate(
-        currentUser?.evmSmartAccounts?.[0] as Address,
         poolId,
         token,
         amount

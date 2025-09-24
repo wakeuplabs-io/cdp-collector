@@ -70,7 +70,7 @@ export const SUPPORTED_ASSETS_BY_CHAIN: Record<
     },
     cbBTC: {
       decimals: 8,
-      name: "Coinbase Wrapped Bitcoin",
+      name: "Coinbase Bitcoin",
       symbol: "cbBTC",
       address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
       iconUrl:

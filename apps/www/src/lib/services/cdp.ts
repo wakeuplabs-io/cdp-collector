@@ -1,12 +1,10 @@
 import {
-  bundlerClient,
-  CDP_CLIENT_API_KEY,
-  CDP_ONRAMP_BASE_URL,
+  bundlerClient, CDP_CLIENT_API_KEY, CDP_ONRAMP_BASE_URL,
   CHAIN_ID,
   NATIVE_ADDRESS,
   NETWORK,
   tokenService,
-  TRADE_PERMIT2_ADDRESS,
+  TRADE_PERMIT2_ADDRESS
 } from "@/config";
 import { Token } from "@/types/token";
 import {

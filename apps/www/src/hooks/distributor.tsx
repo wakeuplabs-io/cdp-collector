@@ -216,15 +216,15 @@ export const useDonations = (
   const { data, isLoading } = useSWR(`/api/distributor/${poolId}/donations`, {
     fetcher: async () => {
       // TODO: cors workaround
-      // const res = await fetch("/api/events", {
-      //   method: "POST",
-      //   body: JSON.stringify({ sql: `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND parameters['poolId']::String = '${poolId}' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;` }),
-      // });
-      // const data = await res.json();
+      const res = await fetch("/api/events", {
+        method: "POST",
+        body: JSON.stringify({ sql: `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND parameters['poolId']::String = '${poolId}' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;` }),
+      });
+      const data = await res.json();
 
-      const res = await CdpService.sqlQueryEvents(
-        `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND parameters['poolId']::String = '${poolId}' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;`
-      );
+      // const res = await CdpService.sqlQueryEvents(
+      //   `SELECT * FROM ${NETWORK.replace("-", "_")}.events WHERE event_signature = 'DonationMade(uint256,address,uint256)' AND parameters['poolId']::String = '${poolId}' AND address = lower('${DISTRIBUTOR_ADDRESS}') LIMIT 100;`
+      // );
 
       return data.map((donation: CdpSqlQueryEventResult) => ({
         poolId: BigInt(donation.parameters.poolId),

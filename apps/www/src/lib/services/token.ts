@@ -85,7 +85,6 @@ export class TokenService {
         {
           to,
           value: amount,
-          data: "0x0",
         },
       ];
     }

@@ -263,6 +263,7 @@ The core `Distributor` contract manages fundraising pools with the following key
 3. **Onramp Integration**: Enable users to make donations directly with fiat currency. Generating an onramp url consists in creating a session token and opening the corresponding url. You can see how to do the former [here](apps/www/src/app/api/session/route.ts) and the latter [here](apps/www/src/hooks/onramp.tsx)
 4. **Trade Api**: We automatically swap received tokens [here](apps/www/src/app/fundraisers/[id]/donate/processing/page.tsx) and the trading logic is concentrated [here](apps/www/src/lib/services/cdp.ts)
 5. **Token Balances**: We use Coinbase Token balances api to retrieve available tokens for user in a blast [here](apps/www/src/app/api/balances/[address]/route.ts)
+6. **Sql Api**: We use Coinbase Sql Data api to easily query historical donation events in [here](apps/www/src/lib/services/cdp.ts)
 
 
 ## 🛠️ Development & Extension

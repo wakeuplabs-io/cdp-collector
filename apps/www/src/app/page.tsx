@@ -26,7 +26,7 @@ export default function Home() {
       <div className="absolute bottom-6 right-6">
         <Button size="sm" className="rounded-full " asChild>
           <a
-            href="https://github.com/wakeuplabs-io/cdp-escrow"
+            href="https://github.com/wakeuplabs-io/cdp-collector"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2"

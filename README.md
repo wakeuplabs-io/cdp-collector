@@ -12,6 +12,14 @@ A decentralized fundraising platform built on Base that enables creators to set 
 - **Multi-token Support**: Support for ETH, USDC, and other ERC-20 tokens
 - **Fiat Onramp**: Integrated Coinbase onramp for easy fiat-to-crypto conversion
 
+## 📹 Demo
+
+Curious to see CDP Collector in action?  
+[Watch our demo on X (formerly Twitter)](https://x.com/wakeuplabs/status/1981095422555742552) or [on YouTube](https://youtu.be/bMoHKnZ6jMI) for a walkthrough of the platform’s key features and user experience.
+
+[![Watch the video](https://img.youtube.com/vi/bMoHKnZ6jMI/0.jpg)](https://youtu.be/bMoHKnZ6jMI)
+
+
 ## 🏗️ Architecture
 
 ### Smart Contracts

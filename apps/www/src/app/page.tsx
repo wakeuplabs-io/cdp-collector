@@ -147,9 +147,10 @@ export default function Home() {
             <Link href={currentUser ? "/dashboard" : "/auth"}>Get Started</Link>
           </Button>
 
-          {/* TODO: add link when available */}
           <Link
-            href="#"
+            href="https://x.com/wakeuplabs/status/1981095422555742552"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground transition-colors text-sm"
           >
             View Demo
